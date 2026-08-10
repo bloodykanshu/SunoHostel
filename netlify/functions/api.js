@@ -1,6 +1,6 @@
 const { MongoClient } = require('mongodb');
 
-const MONGODB_URI = "mongodb+srv://rinshuyadav3_db_user:pb87d013WKdxct0c@sunohostel.2sasybh.mongodb.net/sunohostel?retryWrites=true&w=majority&appName=Sunohostel";
+const MONGODB_URI = "mongodb+srv://rinshuyadav3_db_user:Akansh%401234@sunohostel.2sasybh.mongodb.net/sunohostel?retryWrites=true&w=majority&appName=Sunohostel";
 
 let cachedClient = null;
 let cachedDb = null;
