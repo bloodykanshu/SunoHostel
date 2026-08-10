@@ -1,0 +1,187 @@
+// SunoHostel Complete Prisma Database Schema (PostgreSQL)
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User Roles in the Hostel Ecosystem
+enum Role {
+  STUDENT
+  STAFF
+  ADMIN
+  WARDEN
+}
+
+// Specific Hostels Enum
+enum HostelName {
+  GIRLS_HOSTEL
+  BOYS_DIU_HOSTEL
+  BOYS_UNA_HOSTEL_1
+  BOYS_UNA_HOSTEL_2
+}
+
+// Urgency levels for reported complaints
+enum Urgency {
+  NORMAL
+  URGENT
+  EMERGENCY
+}
+
+// Complaint status lifecycle
+enum ComplaintStatus {
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  REJECTED
+}
+
+// Complaint issue categories
+enum Category {
+  PLUMBING
+  ELECTRICITY
+  WIFI
+  MESS_FOOD
+  CLEANING
+  SECURITY
+  OTHERS
+}
+
+// Meal Types for Mess Menu & Feedback
+enum MealType {
+  BREAKFAST
+  LUNCH
+  SNACKS
+  DINNER
+}
+
+// USER MODEL
+model User {
+  id           String      @id @default(uuid())
+  name         String
+  email        String      @unique
+  phone        String      @unique
+  passwordHash String
+  role         Role        @default(STUDENT)
+  
+  // Student Specific Fields
+  hostelBlock  String?     // e.g. "Girls Hostel", "Boys Diu Hostel", "Boys Una Hostel 1", "Boys Una Hostel 2"
+  roomNumber   String?     // e.g. "304"
+  rollNumber   String?     @unique
+  
+  // Staff Specific Fields
+  specialization Category? // e.g. PLUMBING for staff
+  
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  filedComplaints    Complaint[]    @relation("StudentComplaints")
+  assignedComplaints Complaint[]    @relation("StaffAssignedComplaints")
+  feedbacks          Feedback[]
+  noticesCreated     Notice[]
+  messFeedbacks      MessFeedback[]
+
+  @@map("users")
+}
+
+// COMPLAINT MODEL
+model Complaint {
+  id              String          @id @default(uuid())
+  ticketId        String          @unique // e.g. "SH-2026-1042"
+  title           String
+  description     String
+  category        Category
+  urgency         Urgency         @default(NORMAL)
+  status          ComplaintStatus @default(PENDING)
+  isAnonymous     Boolean         @default(false)
+  roomNumber      String
+  hostelBlock     String          // "Girls Hostel" | "Boys Diu Hostel" | "Boys Una Hostel 1" | "Boys Una Hostel 2"
+  
+  attachments     String[]        
+  resolutionProof String?         
+  resolutionNotes String?         
+  resolvedAt      DateTime?
+
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  studentId       String?         
+  student         User?           @relation("StudentComplaints", fields: [studentId], references: [id], onDelete: SetNull)
+  
+  assignedStaffId String?
+  assignedStaff   User?           @relation("StaffAssignedComplaints", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  assignedStaffName String?       
+  assignedStaffPhone String?      
+
+  feedback        Feedback?       
+
+  @@map("complaints")
+}
+
+// FEEDBACK MODEL
+model Feedback {
+  id          String    @id @default(uuid())
+  rating      Int       
+  comment     String?
+  createdAt   DateTime  @default(now())
+
+  complaintId String    @unique
+  complaint   Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  
+  studentId   String
+  student     User      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@map("feedbacks")
+}
+
+// NOTICE MODEL
+model Notice {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  category    String   @default("GENERAL")
+  isPinned    Boolean  @default(false)
+  targetBlock String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("notices")
+}
+
+// MESS MENU MODEL
+model MessMenu {
+  id        String   @id @default(uuid())
+  date      DateTime @db.Date
+  mealType  MealType
+  items     String[] 
+  createdAt DateTime @default(now())
+
+  feedbacks MessFeedback[]
+
+  @@unique([date, mealType])
+  @@map("mess_menus")
+}
+
+model MessFeedback {
+  id         String   @id @default(uuid())
+  isLiked    Boolean  
+  comment    String?
+  createdAt  DateTime @default(now())
+
+  messMenuId String
+  messMenu   MessMenu @relation(fields: [messMenuId], references: [id], onDelete: Cascade)
+  
+  studentId  String
+  student    User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([messMenuId, studentId]) 
+  @@map("mess_feedbacks")
+}

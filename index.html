@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SunoHostel — Hostel Complaint & Management System</title>
+  <meta name="description" content="Production Hostel Complaint & Management Web System for Students, Wardens, and Maintenance Staff.">
+
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg-main: #0B0F19;
+      --bg-card: #151C2C;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --primary: #6366F1;
+      --primary-hover: #4F46E5;
+      --primary-light: rgba(99, 102, 241, 0.15);
+      --accent-green: #10B981;
+      --accent-amber: #F59E0B;
+      --accent-purple: #8B5CF6;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* GLASSMORPHISM NAVIGATION BAR */
+    .navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(11, 15, 25, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 16px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: #FFF;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      padding: 6px 14px;
+      border-radius: 20px;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.15);
+      color: #FCA5A5;
+      border: 1px solid #DC2626;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* LOGIN SCREEN STYLING */
+    .login-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      background: radial-gradient(circle at top center, rgba(99, 102, 241, 0.12), transparent 70%);
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      width: 480px;
+      max-width: 100%;
+      padding: 36px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .login-logo {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+    }
+
+    .login-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    .login-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .login-tabs {
+      display: flex;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 24px;
+    }
+
+    .login-tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .login-tab-btn.active {
+      background: var(--primary);
+      color: #FFF;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    .form-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #CBD5E1;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 16px;
+      color: #F8FAFC;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      border-color: var(--primary);
+    }
+
+    .form-textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-login {
+      width: 100%;
+      background: linear-gradient(135deg, #6366F1, #4F46E5);
+      color: #FFF;
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+      margin-top: 10px;
+    }
+
+    .portal-banner {
+      padding: 24px 32px 12px 32px;
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .student-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: #FFF;
+      border-color: var(--border-color);
+    }
+
+    .main-content {
+      max-width: 1280px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 0 32px 48px 32px;
+      flex: 1;
+    }
+
+    .grid-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .urgency-group { display: flex; gap: 10px; }
+    .urgency-pill {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1.5px solid var(--border-color);
+      background: rgba(15, 23, 42, 0.5);
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+    }
+    .urgency-pill.active-normal { background: #064E3B; color: #6EE7B7; border-color: #10B981; }
+    .urgency-pill.active-urgent { background: #78350F; color: #FDE68A; border-color: #F59E0B; }
+    .urgency-pill.active-emergency { background: #7F1D1D; color: #FCA5A5; border-color: #EF4444; }
+
+    .anonymous-box {
+      background: var(--primary-light);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    /* Admin Metrics & Table */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; }
+    .stat-val { font-size: 32px; font-weight: 800; margin-top: 8px; }
+
+    .table-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: rgba(15, 23, 42, 0.9); padding: 14px 18px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+    td { padding: 16px 18px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+    .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; }
+
+    .action-btn { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-assign { background: #3B82F6; color: #FFF; }
+    .btn-resolve { background: #10B981; color: #FFF; }
+    .btn-broadcast { background: #8B5CF6; color: #FFF; padding: 10px 16px; border-radius: 8px; border: none; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+
+    /* Modals */
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-card { background: #1E293B; border: 1px solid var(--border-color); border-radius: 18px; width: 480px; padding: 24px; }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar">
+    <a href="#" class="brand">
+      <div class="brand-icon">🏰</div>
+      <div>
+        <span class="brand-title">SunoHostel</span>
+        <div style="font-size: 11px; color: var(--text-muted);">Hostel Complaint System</div>
+      </div>
+    </a>
+
+    <!-- Logged in User Profile Info -->
+    <div id="navUserBox" style="display: none;">
+      <div class="user-badge">
+        <span id="userBadgeRoleIcon">🎓</span>
+        <div>
+          <div style="font-size: 13px; font-weight: 700; color: #FFF;" id="userNameDisplay"></div>
+          <div style="font-size: 11px; color: var(--text-muted);" id="userSubDisplay"></div>
+        </div>
+        <button class="btn-logout" onclick="handleLogout()" style="margin-left: 8px;">
+          <i data-lucide="log-out" style="width: 14px; height: 14px;"></i> Logout
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ========================================================= -->
+  <!-- 1. LOGIN GATEWAY SCREEN -->
+  <!-- ========================================================= -->
+  <div class="login-container" id="loginScreenView">
+    <div class="login-card">
+      
+      <div class="login-header">
+        <div class="login-logo">🏰</div>
+        <h2 class="login-title">SunoHostel Portal Login</h2>
+        <p class="login-subtitle">Choose your role to access your portal</p>
+      </div>
+
+      <!-- Role Selection Tabs for Login -->
+      <div class="login-tabs">
+        <button class="login-tab-btn active" id="lTabStudent" onclick="switchLoginRole('STUDENT')">
+          <i data-lucide="user"></i> Student Login
+        </button>
+        <button class="login-tab-btn" id="lTabAdmin" onclick="switchLoginRole('ADMIN')">
+          <i data-lucide="shield"></i> Admin / Warden Login
+        </button>
+      </div>
+
+      <!-- STUDENT LOGIN FORM -->
+      <form id="formStudentLogin" onsubmit="handleStudentLogin(event)">
+        <div class="form-group">
+          <label class="form-label">Student Name / Roll No. *</label>
+          <input type="text" id="sName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">Room Number *</label>
+            <input type="text" id="sRoom" class="form-input" placeholder="e.g. 304" required>
+          </div>
+          <div class="form-group" style="flex: 1;">
+            <label class="form-label">Select Hostel *</label>
+            <select id="sBlock" class="form-select">
+              <option value="Girls Hostel">👩 Girls Hostel</option>
+              <option value="Boys Diu Hostel">👨 Boys Diu Hostel</option>
+              <option value="Boys Una Hostel 1">👨 Boys Una Hostel 1</option>
+              <option value="Boys Una Hostel 2">👨 Boys Una Hostel 2</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Password *</label>
+          <input type="password" id="sPassword" class="form-input" placeholder="Enter password" required>
+        </div>
+
+        <button type="submit" class="btn-login">
+          <i data-lucide="log-in"></i> Login To Student Portal
+        </button>
+      </form>
+
+      <!-- ADMIN / WARDEN LOGIN FORM -->
+      <form id="formAdminLogin" onsubmit="handleAdminLogin(event)" style="display: none;">
+        <div class="form-group">
+          <label class="form-label">Warden Name / Email *</label>
+          <input type="text" id="aEmail" class="form-input" placeholder="e.g. Chief Warden / Dr. Sharma">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Admin Passcode *</label>
+          <input type="password" id="aPasscode" class="form-input" placeholder="Enter passcode (e.g. admin123)">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hostel Assigned</label>
+          <select class="form-select" id="aRegion">
+            <option value="All Hostels (Chief Warden)">🏰 All Hostels (Chief Warden)</option>
+            <option value="Girls Hostel Warden">👩 Girls Hostel Warden</option>
+            <option value="Boys Diu Hostel Warden">👨 Boys Diu Hostel Warden</option>
+            <option value="Boys Una Hostel 1 Warden">👨 Boys Una Hostel 1 Warden</option>
+            <option value="Boys Una Hostel 2 Warden">👨 Boys Una Hostel 2 Warden</option>
+          </select>
+        </div>
+
+        <button type="button" class="btn-login" onclick="handleAdminLogin(event)" style="background: linear-gradient(135deg, #8B5CF6, #6366F1);">
+          <i data-lucide="shield-check"></i> Login To Warden Console
+        </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- ========================================================= -->
+  <!-- 2. MAIN APPLICATION (AUTHENTICATED VIEWS) -->
+  <!-- ========================================================= -->
+  <div id="authenticatedAppView" style="display: none;">
+    
+    <header class="portal-banner">
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+        <div>
+          <h1 style="font-size: 26px; font-weight: 800;" id="portalTitleText">Student Self-Service Portal</h1>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 2px;" id="portalDescText">Report room issues, track repair progress live, view notices, & rate mess meals.</p>
+        </div>
+        <div id="adminActionBox" style="display: none;">
+          <button class="btn-broadcast" onclick="openNoticeModal()">
+            <i data-lucide="megaphone"></i> Broadcast Digital Notice
+          </button>
+        </div>
+      </div>
+
+      <!-- Student Navigation Tabs -->
+      <div class="student-tabs" id="studentTabsBar">
+        <button class="tab-btn active" id="tReport" onclick="setStudentTab('REPORT')">
+          <i data-lucide="plus-circle"></i> File Complaint
+        </button>
+        <button class="tab-btn" id="tTracker" onclick="setStudentTab('TRACKER')">
+          <i data-lucide="activity"></i> Live Ticket Tracker
+        </button>
+        <button class="tab-btn" id="tNotices" onclick="setStudentTab('NOTICES')">
+          <i data-lucide="bell"></i> Digital Notice Board
+        </button>
+        <button class="tab-btn" id="tMess" onclick="setStudentTab('MESS')">
+          <i data-lucide="utensils"></i> Mess Menu & Voting
+        </button>
+      </div>
+    </header>
+
+    <main class="main-content">
+
+      <!-- STUDENT PORTAL -->
+      <div id="studentPortalView">
+        
+        <!-- TAB 1: FILE COMPLAINT -->
+        <div id="tabContentReport" class="grid-2col">
+          <div class="card">
+            <div class="card-title">
+              <i data-lucide="clipboard-edit" style="color: var(--primary);"></i>
+              <span>Log New Hostel Complaint</span>
+            </div>
+
+            <div class="anonymous-box">
+              <div>
+                <div style="font-weight: 700; font-size: 14px; color: #818CF8;">Submit Anonymously 🛡️</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Hide identity for sensitive hygiene or ragging reports</div>
+              </div>
+              <input type="checkbox" id="formAnonymous" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+            </div>
+
+            <div class="form-row">
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label">Room Number *</label>
+                <input type="text" id="formRoom" class="form-input" placeholder="e.g. 304">
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label class="form-label">Select Hostel *</label>
+                <select id="formBlock" class="form-select">
+                  <option value="Girls Hostel">👩 Girls Hostel</option>
+                  <option value="Boys Diu Hostel">👨 Boys Diu Hostel</option>
+                  <option value="Boys Una Hostel 1">👨 Boys Una Hostel 1</option>
+                  <option value="Boys Una Hostel 2">👨 Boys Una Hostel 2</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Issue Category *</label>
+              <select id="formCategory" class="form-select">
+                <option value="PLUMBING">🚰 Plumbing & Water Leakage</option>
+                <option value="ELECTRICITY">⚡ Electricity & Appliance Repair</option>
+                <option value="WIFI">📶 Wi-Fi & Internet Connectivity</option>
+                <option value="MESS_FOOD">🍲 Mess Food & Hygiene Quality</option>
+                <option value="CLEANING">🧹 Housekeeping & Cleaning</option>
+                <option value="SECURITY">🛡️ Security & Ragging Prevention</option>
+                <option value="OTHERS">📦 Others</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Urgency Level *</label>
+              <div class="urgency-group">
+                <div class="urgency-pill active-normal" id="pillNormal" onclick="selectUrgency('NORMAL')">Normal (24h)</div>
+                <div class="urgency-pill" id="pillUrgent" onclick="selectUrgency('URGENT')">Urgent (12h)</div>
+                <div class="urgency-pill" id="pillEmergency" onclick="selectUrgency('EMERGENCY')">Emergency (&lt;2h)</div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Issue Title *</label>
+              <input type="text" id="formTitle" class="form-input" placeholder="Enter short title summary">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Detailed Description *</label>
+              <textarea id="formDesc" class="form-textarea" placeholder="Explain exact location and problem details..."></textarea>
+            </div>
+
+            <button class="btn-login" onclick="submitComplaintForm()">
+              <i data-lucide="send"></i> Submit Ticket To Warden
+            </button>
+          </div>
+
+          <div>
+            <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-color: rgba(99, 102, 241, 0.3);">
+              <div class="card-title" style="color: #A78BFA;">
+                <i data-lucide="zap"></i> Quick Resolution Guarantee
+              </div>
+              <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+                Complaints logged via SunoHostel are instantly dispatched to duty staff. Wardens verify completion photo proof before closing tickets.
+              </p>
+            </div>
+
+            <div class="card">
+              <div class="card-title"><i data-lucide="clock"></i> Your Active Complaints</div>
+              <div id="recentTicketsSideList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: LIVE TRACKER -->
+        <div id="tabContentTracker" style="display: none;">
+          <div id="trackerStreamContainer"></div>
+        </div>
+
+        <!-- TAB 3: NOTICE BOARD -->
+        <div id="tabContentNotices" style="display: none;">
+          <div id="noticesStreamGrid" class="grid-2col"></div>
+        </div>
+
+        <!-- TAB 4: MESS MENU -->
+        <div id="tabContentMess" style="display: none;">
+          <div id="messMenuGrid" class="grid-2col"></div>
+        </div>
+
+      </div>
+
+      <!-- WARDEN / ADMIN PORTAL -->
+      <div id="adminPortalView" style="display: none;">
+        <div class="stats-grid">
+          <div class="stat-card" style="border-left: 4px solid #3B82F6;">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">TOTAL COMPLAINTS</div>
+            <div class="stat-val" id="admTotal">0</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #F59E0B;">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">PENDING ACTION</div>
+            <div class="stat-val" style="color: #F59E0B;" id="admPending">0</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #8B5CF6;">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">IN PROGRESS</div>
+            <div class="stat-val" style="color: #8B5CF6;" id="admInProgress">0</div>
+          </div>
+          <div class="stat-card" style="border-left: 4px solid #10B981;">
+            <div style="font-size: 12px; color: var(--text-muted); font-weight: 700;">RESOLVED & VERIFIED</div>
+            <div class="stat-val" style="color: #10B981;" id="admResolved">0</div>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Ticket ID & Summary</th>
+                <th>Category</th>
+                <th>Room & Hostel</th>
+                <th>Urgency</th>
+                <th>Status</th>
+                <th>Assigned Duty Staff</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL: ASSIGN STAFF -->
+  <div class="modal-overlay" id="modalAssign">
+    <div class="modal-card">
+      <h3 style="font-size: 18px; font-weight: 800; margin-bottom: 10px;" id="modalAssignTitle">Assign Staff</h3>
+      <div class="form-group">
+        <label class="form-label">Staff Name *</label>
+        <input type="text" id="assignStaffName" class="form-input" placeholder="e.g. Ramesh Kumar">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Phone Number *</label>
+        <input type="text" id="assignStaffPhone" class="form-input" placeholder="e.g. +91 99887 76655">
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+        <button class="action-btn" style="background: #475569; color: #FFF;" onclick="closeModals()">Cancel</button>
+        <button class="action-btn btn-assign" onclick="saveStaffAssignment()">Confirm Duty Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RESOLVE PROOF -->
+  <div class="modal-overlay" id="modalResolve">
+    <div class="modal-card">
+      <h3 style="font-size: 18px; font-weight: 800; color: #10B981; margin-bottom: 8px;">Resolution Proof Verification</h3>
+      <div style="border: 2px dashed #10B981; padding: 20px; border-radius: 10px; text-align: center; background: rgba(16, 185, 129, 0.05); margin-bottom: 16px;">
+        <i data-lucide="check-circle" style="color: #10B981; width: 32px; height: 32px;"></i>
+        <div style="font-size: 13px; font-weight: 700; color: #E2E8F0; margin-top: 6px;">Completion Photo Proof Attached ✅</div>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="action-btn" style="background: #475569; color: #FFF;" onclick="closeModals()">Cancel</button>
+        <button class="action-btn btn-resolve" onclick="saveResolution()">Mark Ticket Resolved</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BROADCAST NOTICE -->
+  <div class="modal-overlay" id="modalNotice">
+    <div class="modal-card">
+      <h3 style="font-size: 18px; font-weight: 800; color: #8B5CF6; margin-bottom: 10px;">Broadcast Digital Notice</h3>
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select id="noticeCategory" class="form-select">
+          <option value="MAINTENANCE">Maintenance Alert</option>
+          <option value="MESS">Mess Announcement</option>
+          <option value="URGENT">Urgent Security Rule</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Title *</label>
+        <input type="text" id="noticeTitleInput" class="form-input" placeholder="e.g. Water Tank Maintenance Schedule">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Content *</label>
+        <textarea id="noticeContentInput" class="form-textarea" placeholder="Message for students..."></textarea>
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="action-btn" style="background: #475569; color: #FFF;" onclick="closeModals()">Cancel</button>
+        <button class="action-btn btn-broadcast" onclick="publishNotice()">Broadcast Announcement</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIC SCRIPT -->
+  <script>
+    let tickets = [];
+    let notices = [];
+    let meals = [
+      { type: 'BREAKFAST', time: '07:30 AM - 09:30 AM', items: 'Puri Bhaji • Tea / Coffee • Fruits', likes: 0, dislikes: 0, voted: null },
+      { type: 'LUNCH', time: '12:30 PM - 02:30 PM', items: 'Paneer Gravy • Dal • Rice • Chapati', likes: 0, dislikes: 0, voted: null },
+      { type: 'SNACKS', time: '05:00 PM - 06:00 PM', items: 'Tea & Evening Snacks', likes: 0, dislikes: 0, voted: null },
+      { type: 'DINNER', time: '07:30 PM - 09:30 PM', items: 'Special Veg Thali • Dessert', likes: 0, dislikes: 0, voted: null },
+    ];
+
+    let activeLoginTab = 'STUDENT';
+    let currentUser = null;
+    let currentUrgency = 'NORMAL';
+    let selectedTicketId = null;
+
+    lucide.createIcons();
+
+    function switchLoginRole(role) {
+      activeLoginTab = role;
+      document.getElementById('lTabStudent').classList.toggle('active', role === 'STUDENT');
+      document.getElementById('lTabAdmin').classList.toggle('active', role === 'ADMIN');
+
+      document.getElementById('formStudentLogin').style.display = role === 'STUDENT' ? 'block' : 'none';
+      document.getElementById('formAdminLogin').style.display = role === 'ADMIN' ? 'block' : 'none';
+    }
+
+    function handleStudentLogin(e) {
+      if (e) e.preventDefault();
+      const name = document.getElementById('sName').value.trim() || 'Student';
+      const room = document.getElementById('sRoom').value.trim() || '304';
+      const block = document.getElementById('sBlock').value;
+
+      currentUser = { role: 'STUDENT', name, room, block };
+      showAuthenticatedPortal();
+    }
+
+    function handleAdminLogin(e) {
+      if (e) e.preventDefault();
+      const emailInput = document.getElementById('aEmail').value.trim();
+      const adminName = emailInput || 'Chief Warden';
+      const region = document.getElementById('aRegion').value || 'All Hostels';
+
+      currentUser = { role: 'ADMIN', name: adminName, title: region };
+      showAuthenticatedPortal();
+    }
+
+    function handleLogout() {
+      currentUser = null;
+      document.getElementById('loginScreenView').style.display = 'flex';
+      document.getElementById('authenticatedAppView').style.display = 'none';
+      document.getElementById('navUserBox').style.display = 'none';
+    }
+
+    function showAuthenticatedPortal() {
+      document.getElementById('loginScreenView').style.display = 'none';
+      document.getElementById('authenticatedAppView').style.display = 'block';
+      document.getElementById('navUserBox').style.display = 'flex';
+
+      if (currentUser.role === 'STUDENT') {
+        document.getElementById('userBadgeRoleIcon').innerText = '🎓';
+        document.getElementById('userNameDisplay').innerText = currentUser.name + ' (Student)';
+        document.getElementById('userSubDisplay').innerText = `Room ${currentUser.room} • ${currentUser.block}`;
+
+        document.getElementById('studentPortalView').style.display = 'block';
+        document.getElementById('adminPortalView').style.display = 'none';
+        document.getElementById('studentTabsBar').style.display = 'flex';
+        document.getElementById('adminActionBox').style.display = 'none';
+
+        document.getElementById('portalTitleText').innerText = 'Student Self-Service Portal';
+        document.getElementById('portalDescText').innerText = 'Report room issues, track repair progress live, view notices, & rate mess meals.';
+        
+        document.getElementById('formRoom').value = currentUser.room;
+        document.getElementById('formBlock').value = currentUser.block;
+
+        setStudentTab('REPORT');
+      } else {
+        document.getElementById('userBadgeRoleIcon').innerText = '🛡️';
+        document.getElementById('userNameDisplay').innerText = currentUser.name;
+        document.getElementById('userSubDisplay').innerText = currentUser.title;
+
+        document.getElementById('studentPortalView').style.display = 'none';
+        document.getElementById('adminPortalView').style.display = 'block';
+        document.getElementById('studentTabsBar').style.display = 'none';
+        document.getElementById('adminActionBox').style.display = 'block';
+
+        document.getElementById('portalTitleText').innerText = 'Warden Operations Command Console';
+        document.getElementById('portalDescText').innerText = 'Manage tickets, assign staff duties, verify resolution proofs, & broadcast digital notices.';
+      }
+
+      renderAll();
+    }
+
+    function setStudentTab(tab) {
+      ['Report', 'Tracker', 'Notices', 'Mess'].forEach(t => {
+        const active = (t.toUpperCase() === tab);
+        document.getElementById('tabContent' + t).style.display = active ? (t === 'Report' ? 'grid' : 'block') : 'none';
+        document.getElementById('t' + t).classList.toggle('active', active);
+      });
+    }
+
+    function selectUrgency(u) {
+      currentUrgency = u;
+      ['Normal', 'Urgent', 'Emergency'].forEach(type => {
+        document.getElementById('pill' + type).className = 'urgency-pill' + (type.toUpperCase() === u ? ' active-' + type.toLowerCase() : '');
+      });
+    }
+
+    function submitComplaintForm() {
+      const title = document.getElementById('formTitle').value.trim();
+      const desc = document.getElementById('formDesc').value.trim();
+      const room = document.getElementById('formRoom').value.trim() || currentUser?.room || '';
+      const block = document.getElementById('formBlock').value.trim() || currentUser?.block || '';
+      const category = document.getElementById('formCategory').value;
+      const isAnon = document.getElementById('formAnonymous').checked;
+
+      if (!title || !desc) return alert('Please enter issue title and description.');
+
+      const newId = 'SH-2026-' + Math.floor(1000 + Math.random() * 9000);
+      tickets.unshift({
+        id: newId,
+        title,
+        category,
+        room,
+        block,
+        urgency: currentUrgency,
+        status: 'PENDING',
+        staff: null,
+        isAnon,
+        studentName: isAnon ? 'Anonymous Student' : currentUser?.name || 'Student'
+      });
+
+      alert('Complaint Ticket ' + newId + ' Logged Successfully! 🎉');
+      document.getElementById('formTitle').value = '';
+      document.getElementById('formDesc').value = '';
+      document.getElementById('formAnonymous').checked = false;
+
+      renderAll();
+      setStudentTab('TRACKER');
+    }
+
+    function renderAll() {
+      renderAdminTable();
+      renderTrackerStream();
+      renderNoticesGrid();
+      renderMessMenuGrid();
+      renderRecentSideList();
+    }
+
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = '';
+      let pending = 0, inProgress = 0, resolved = 0;
+
+      if (tickets.length === 0) {
+        tbody.innerHTML = '<tr><td colSpan="7" class="empty-state">No complaints logged in system yet. Student complaints will appear here in real-time.</td></tr>';
+      } else {
+        tickets.forEach(t => {
+          if (t.status === 'PENDING') pending++;
+          if (t.status === 'IN_PROGRESS') inProgress++;
+          if (t.status === 'RESOLVED') resolved++;
+
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <div style="font-weight: 700;">${t.id}</div>
+              <div style="color: var(--text-muted); font-size: 13px;">${t.title}</div>
+              <div style="font-size: 11px; color: #818CF8; margin-top: 2px;">Filed by: ${t.studentName}</div>
+            </td>
+            <td><span style="background: rgba(255,255,255,0.06); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">${t.category}</span></td>
+            <td><span style="color: #38BDF8; font-weight: 700;">Room ${t.room} (${t.block})</span></td>
+            <td><span class="badge" style="background: ${t.urgency === 'EMERGENCY' ? '#7F1D1D' : t.urgency === 'URGENT' ? '#78350F' : '#064E3B'}; color: ${t.urgency === 'EMERGENCY' ? '#FCA5A5' : t.urgency === 'URGENT' ? '#FDE68A' : '#6EE7B7'};">${t.urgency}</span></td>
+            <td><span class="badge ${t.status === 'RESOLVED' ? 'badge-resolved' : t.status === 'IN_PROGRESS' ? 'badge-progress' : 'badge-pending'}">${t.status}</span></td>
+            <td>${t.staff ? `<span style="font-size: 13px; color: #CBD5E1;">${t.staff}</span>` : '<span style="color: #64748B; font-style: italic; font-size: 13px;">Unassigned</span>'}</td>
+            <td>
+              ${t.status !== 'RESOLVED' ? `<button class="action-btn btn-assign" onclick="openAssignModal('${t.id}')">Assign Staff</button>` : ''}
+              ${t.status === 'IN_PROGRESS' ? `<button class="action-btn btn-resolve" style="margin-left: 6px;" onclick="openResolveModal('${t.id}')">Resolve</button>` : ''}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      document.getElementById('admTotal').innerText = tickets.length;
+      document.getElementById('admPending').innerText = pending;
+      document.getElementById('admInProgress').innerText = inProgress;
+      document.getElementById('admResolved').innerText = resolved;
+    }
+
+    function renderTrackerStream() {
+      const container = document.getElementById('trackerStreamContainer');
+      container.innerHTML = '';
+
+      if (tickets.length === 0) {
+        container.innerHTML = '<div class="card empty-state">No complaints logged yet. Submit your first ticket above!</div>';
+        return;
+      }
+
+      tickets.forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.marginBottom = '16px';
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: 800; color: var(--primary); font-size: 15px;">${t.id}</span>
+            <span class="badge ${t.status === 'RESOLVED' ? 'badge-resolved' : t.status === 'IN_PROGRESS' ? 'badge-progress' : 'badge-pending'}">${t.status}</span>
+          </div>
+          <h3 style="font-size: 17px; font-weight: 700; margin-bottom: 4px;">${t.title}</h3>
+          <div style="font-size: 13px; color: var(--text-muted);">Category: ${t.category} • Room ${t.room} (${t.block})</div>
+
+          <div style="margin-top: 14px; background: rgba(15, 23, 42, 0.6); padding: 12px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="font-size: 12px; font-weight: 700; color: #CBD5E1; margin-bottom: 4px;">Lifecycle Progress:</div>
+            <div style="font-size: 13px; color: #38BDF8;">
+              ${t.status === 'PENDING' ? '⏳ Logged & Waiting for Duty Assignment' : t.status === 'IN_PROGRESS' ? '🔧 Staff Assigned: ' + t.staff : '✅ Issue Resolved & Completion Proof Verified'}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderNoticesGrid() {
+      const container = document.getElementById('noticesStreamGrid');
+      container.innerHTML = '';
+
+      if (notices.length === 0) {
+        container.innerHTML = '<div class="card empty-state" style="grid-column: 1 / -1;">No active notices broadcasted yet. Warden announcements will appear here.</div>';
+        return;
+      }
+
+      notices.forEach(n => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800;">${n.category}</span>
+            <span style="font-size: 12px; color: var(--text-muted);">${n.date}</span>
+          </div>
+          <h3 style="font-size: 17px; font-weight: 800; margin-bottom: 8px;">${n.title}</h3>
+          <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6;">${n.content}</p>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderMessMenuGrid() {
+      const container = document.getElementById('messMenuGrid');
+      container.innerHTML = '';
+      meals.forEach((m, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span style="font-size: 17px; font-weight: 800; color: var(--primary);">${m.type}</span>
+            <span style="font-size: 12px; color: var(--text-muted);">${m.time}</span>
+          </div>
+          <p style="font-size: 14px; font-weight: 600; color: #E2E8F0; margin-bottom: 14px;">${m.items}</p>
+          <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 12px;">
+            <span style="font-size: 12px; color: var(--text-muted);">Meal Quality Rating:</span>
+            <div style="display: flex; gap: 8px;">
+              <button onclick="voteMeal(${idx}, true)" style="background: ${m.voted==='LIKE'?'#10B981':'rgba(15,23,42,0.8)'}; color: ${m.voted==='LIKE'?'#FFF':'#10B981'}; border: 1px solid #10B981; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">👍 ${m.likes}</button>
+              <button onclick="voteMeal(${idx}, false)" style="background: ${m.voted==='DISLIKE'?'#EF4444':'rgba(15,23,42,0.8)'}; color: ${m.voted==='DISLIKE'?'#FFF':'#EF4444'}; border: 1px solid #EF4444; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">👎 ${m.dislikes}</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderRecentSideList() {
+      const container = document.getElementById('recentTicketsSideList');
+      container.innerHTML = '';
+
+      if (tickets.length === 0) {
+        container.innerHTML = '<div style="font-size: 13px; color: var(--text-muted); font-style: italic;">No active complaints yet.</div>';
+        return;
+      }
+
+      tickets.slice(0, 3).forEach(t => {
+        const div = document.createElement('div');
+        div.style.cssText = 'padding: 10px 0; border-bottom: 1px solid var(--border-color);';
+        div.innerHTML = `
+          <div style="display: flex; justify-content: space-between;">
+            <span style="font-weight: 700; font-size: 13px; color: var(--primary);">${t.id}</span>
+            <span style="font-size: 11px; color: #38BDF8;">Room ${t.room}</span>
+          </div>
+          <div style="font-size: 13px; color: var(--text-muted); marginTop: 2px;">${t.title}</div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function voteMeal(idx, isLike) {
+      const m = meals[idx];
+      m.voted = isLike ? 'LIKE' : 'DISLIKE';
+      if (isLike) m.likes++; else m.dislikes++;
+      renderMessMenuGrid();
+    }
+
+    function openAssignModal(id) {
+      selectedTicketId = id;
+      document.getElementById('modalAssignTitle').innerText = 'Assign Staff to ' + id;
+      document.getElementById('modalAssign').style.display = 'flex';
+    }
+
+    function openResolveModal(id) {
+      selectedTicketId = id;
+      document.getElementById('modalResolve').style.display = 'flex';
+    }
+
+    function openNoticeModal() {
+      document.getElementById('modalNotice').style.display = 'flex';
+    }
+
+    function closeModals() {
+      document.getElementById('modalAssign').style.display = 'none';
+      document.getElementById('modalResolve').style.display = 'none';
+      document.getElementById('modalNotice').style.display = 'none';
+    }
+
+    function saveStaffAssignment() {
+      const name = document.getElementById('assignStaffName').value.trim();
+      const phone = document.getElementById('assignStaffPhone').value.trim();
+      if (!name || !phone) return alert('Please enter staff name and phone number.');
+      const t = tickets.find(x => x.id === selectedTicketId);
+      if (t) { t.status = 'IN_PROGRESS'; t.staff = name + ' • ' + phone; }
+      closeModals();
+      renderAll();
+    }
+
+    function saveResolution() {
+      const t = tickets.find(x => x.id === selectedTicketId);
+      if (t) { t.status = 'RESOLVED'; }
+      closeModals();
+      renderAll();
+    }
+
+    function publishNotice() {
+      const title = document.getElementById('noticeTitleInput').value.trim();
+      const content = document.getElementById('noticeContentInput').value.trim();
+      const category = document.getElementById('noticeCategory').value;
+      if (!title || !content) return alert('Please enter notice title and content.');
+      notices.unshift({ id: 'n' + Date.now(), title, category, content, date: 'Just Now' });
+      closeModals();
+      renderNoticesGrid();
+      alert('Digital Notice Broadcasted to all students! 📢');
+    }
+  </script>
+</body>
+</html>
