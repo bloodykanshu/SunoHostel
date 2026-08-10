@@ -1,7 +1,7 @@
-// SunoHostel Complete Prisma Database Schema (PostgreSQL)
+// SunoHostel Complete Prisma Database Schema (CockroachDB 10 GB Free Cloud DB)
 
 datasource db {
-  provider = "postgresql"
+  provider = "cockroachdb"
   url      = env("DATABASE_URL")
 }
 
@@ -9,76 +9,25 @@ generator client {
   provider = "prisma-client-js"
 }
 
-// User Roles in the Hostel Ecosystem
-enum Role {
-  STUDENT
-  STAFF
-  ADMIN
-  WARDEN
-}
-
-// Specific Hostels Enum
-enum HostelName {
-  GIRLS_HOSTEL
-  BOYS_DIU_HOSTEL
-  BOYS_UNA_HOSTEL_1
-  BOYS_UNA_HOSTEL_2
-}
-
-// Urgency levels for reported complaints
-enum Urgency {
-  NORMAL
-  URGENT
-  EMERGENCY
-}
-
-// Complaint status lifecycle
-enum ComplaintStatus {
-  PENDING
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-  REJECTED
-}
-
-// Complaint issue categories
-enum Category {
-  PLUMBING
-  ELECTRICITY
-  WIFI
-  MESS_FOOD
-  CLEANING
-  SECURITY
-  OTHERS
-}
-
-// Meal Types for Mess Menu & Feedback
-enum MealType {
-  BREAKFAST
-  LUNCH
-  SNACKS
-  DINNER
-}
-
 // USER MODEL
 model User {
-  id           String      @id @default(uuid())
+  id           String   @id @default(uuid())
   name         String
-  email        String      @unique
-  phone        String      @unique
+  email        String   @unique
+  phone        String   @unique
   passwordHash String
-  role         Role        @default(STUDENT)
+  role         String   @default("STUDENT") // STUDENT | STAFF | ADMIN | WARDEN
   
   // Student Specific Fields
-  hostelBlock  String?     // e.g. "Girls Hostel", "Boys Diu Hostel", "Boys Una Hostel 1", "Boys Una Hostel 2"
-  roomNumber   String?     // e.g. "304"
-  rollNumber   String?     @unique
+  hostelBlock  String?  // "Girls Hostel", "Boys Diu Hostel", "Boys Una Hostel 1", "Boys Una Hostel 2"
+  roomNumber   String?  // e.g. "304"
+  rollNumber   String?  @unique
   
   // Staff Specific Fields
-  specialization Category? // e.g. PLUMBING for staff
+  specialization String? // PLUMBING, ELECTRICITY, etc.
   
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   filedComplaints    Complaint[]    @relation("StudentComplaints")
   assignedComplaints Complaint[]    @relation("StaffAssignedComplaints")
@@ -91,34 +40,34 @@ model User {
 
 // COMPLAINT MODEL
 model Complaint {
-  id              String          @id @default(uuid())
-  ticketId        String          @unique // e.g. "SH-2026-1042"
+  id              String    @id @default(uuid())
+  ticketId        String    @unique // e.g. "SH-2026-1042"
   title           String
   description     String
-  category        Category
-  urgency         Urgency         @default(NORMAL)
-  status          ComplaintStatus @default(PENDING)
-  isAnonymous     Boolean         @default(false)
+  category        String    // PLUMBING | ELECTRICITY | WIFI | MESS_FOOD | CLEANING | SECURITY | OTHERS
+  urgency         String    @default("NORMAL") // NORMAL | URGENT | EMERGENCY
+  status          String    @default("PENDING") // PENDING | IN_PROGRESS | RESOLVED | CLOSED | REJECTED
+  isAnonymous     Boolean   @default(false)
   roomNumber      String
-  hostelBlock     String          // "Girls Hostel" | "Boys Diu Hostel" | "Boys Una Hostel 1" | "Boys Una Hostel 2"
+  hostelBlock     String    // "Girls Hostel" | "Boys Diu Hostel" | "Boys Una Hostel 1" | "Boys Una Hostel 2"
   
-  attachments     String[]        
-  resolutionProof String?         
-  resolutionNotes String?         
+  attachments     String[]  
+  resolutionProof String?   
+  resolutionNotes String?   
   resolvedAt      DateTime?
 
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  studentId       String?         
-  student         User?           @relation("StudentComplaints", fields: [studentId], references: [id], onDelete: SetNull)
+  studentId       String?   
+  student         User?     @relation("StudentComplaints", fields: [studentId], references: [id], onDelete: SetNull)
   
   assignedStaffId String?
-  assignedStaff   User?           @relation("StaffAssignedComplaints", fields: [assignedStaffId], references: [id], onDelete: SetNull)
-  assignedStaffName String?       
-  assignedStaffPhone String?      
+  assignedStaff   User?     @relation("StaffAssignedComplaints", fields: [assignedStaffId], references: [id], onDelete: SetNull)
+  assignedStaffName String? 
+  assignedStaffPhone String?
 
-  feedback        Feedback?       
+  feedback        Feedback? 
 
   @@map("complaints")
 }
@@ -160,7 +109,7 @@ model Notice {
 model MessMenu {
   id        String   @id @default(uuid())
   date      DateTime @db.Date
-  mealType  MealType
+  mealType  String   // BREAKFAST | LUNCH | SNACKS | DINNER
   items     String[] 
   createdAt DateTime @default(now())
 
