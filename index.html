@@ -722,6 +722,8 @@
 
   <!-- LOGIC SCRIPT -->
   <script>
+    const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+    
     let tickets = [];
     let notices = [];
     let meals = [
@@ -747,23 +749,43 @@
       document.getElementById('formAdminLogin').style.display = role === 'ADMIN' ? 'block' : 'none';
     }
 
-    function handleStudentLogin(e) {
+    async function handleStudentLogin(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('sName').value.trim() || 'Student';
       const room = document.getElementById('sRoom').value.trim() || '304';
       const block = document.getElementById('sBlock').value;
 
       currentUser = { role: 'STUDENT', name, room, block };
+      
+      // Async Save to CockroachDB
+      try {
+        fetch(`${API_BASE}/auth/register-sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, roomNumber: room, hostelBlock: block, role: 'STUDENT' })
+        }).catch(err => console.log('DB sync:', err));
+      } catch (err) {}
+
       showAuthenticatedPortal();
     }
 
-    function handleAdminLogin(e) {
+    async function handleAdminLogin(e) {
       if (e) e.preventDefault();
       const emailInput = document.getElementById('aEmail').value.trim();
       const adminName = emailInput || 'Chief Warden';
       const region = document.getElementById('aRegion').value || 'All Hostels';
 
       currentUser = { role: 'ADMIN', name: adminName, title: region };
+
+      // Async Save to CockroachDB
+      try {
+        fetch(`${API_BASE}/auth/register-sync`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: adminName, role: 'WARDEN', hostelBlock: region })
+        }).catch(err => console.log('DB sync:', err));
+      } catch (err) {}
+
       showAuthenticatedPortal();
     }
 
@@ -828,7 +850,7 @@
       });
     }
 
-    function submitComplaintForm() {
+    async function submitComplaintForm() {
       const title = document.getElementById('formTitle').value.trim();
       const desc = document.getElementById('formDesc').value.trim();
       const room = document.getElementById('formRoom').value.trim() || currentUser?.room || '';
@@ -839,7 +861,7 @@
       if (!title || !desc) return alert('Please enter issue title and description.');
 
       const newId = 'SH-2026-' + Math.floor(1000 + Math.random() * 9000);
-      tickets.unshift({
+      const ticketObj = {
         id: newId,
         title,
         category,
@@ -850,7 +872,27 @@
         staff: null,
         isAnon,
         studentName: isAnon ? 'Anonymous Student' : currentUser?.name || 'Student'
-      });
+      };
+
+      tickets.unshift(ticketObj);
+
+      // Async DB Push
+      try {
+        fetch(`${API_BASE}/complaints`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ticketId: newId,
+            title,
+            description: desc,
+            category,
+            urgency: currentUrgency,
+            roomNumber: room,
+            hostelBlock: block,
+            isAnonymous: isAnon
+          })
+        }).catch(err => console.log('DB sync error:', err));
+      } catch (err) {}
 
       alert('Complaint Ticket ' + newId + ' Logged Successfully! 🎉');
       document.getElementById('formTitle').value = '';
