@@ -29,13 +29,15 @@ exports.handler = async (event, context) => {
       const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
       const role = body.role || 'STUDENT';
 
-      const email = name.toLowerCase().replace(/[^a-z0-9]/g, '') + Math.floor(100 + Math.random() * 900) + '@sunohostel.edu';
-      const phone = '+91 ' + Math.floor(1000000000 + Math.random() * 9000000000);
+      // Use user provided email or fallback to @iiitvadodara.ac.in
+      const email = body.email ? body.email.trim() : (name.toLowerCase().replace(/[^a-z0-9]/g, '') + Math.floor(100 + Math.random() * 900) + '@iiitvadodara.ac.in');
+      const phone = body.phone ? body.phone.trim() : ('+91 ' + Math.floor(1000000000 + Math.random() * 9000000000));
       const rollNumber = '2026' + Math.floor(1000 + Math.random() * 9000);
 
       const res = await client.query(`
         INSERT INTO users (name, email, phone, passwordHash, role, hostelBlock, roomNumber, rollNumber)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, roomNumber = EXCLUDED.roomNumber, phone = EXCLUDED.phone
         RETURNING *;
       `, [name, email, phone, 'pass_123', role, hostelBlock, roomNumber, rollNumber]);
 

@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SunoHostel — Hostel Complaint & Management System</title>
-  <meta name="description" content="Production Hostel Complaint & Management Web System for Students, Wardens, and Maintenance Staff.">
+  <title>SunoHostel — IIIT Vadodara Hostel Management System</title>
+  <meta name="description" content="Production Hostel Complaint & Management Web System for IIIT Vadodara Students & Wardens.">
 
   <!-- Google Fonts & Lucide Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -120,7 +120,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 24px;
-      width: 480px;
+      width: 520px;
       max-width: 100%;
       padding: 36px;
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
@@ -410,11 +410,21 @@
         </button>
       </div>
 
-      <!-- STUDENT LOGIN FORM -->
+      <!-- STUDENT LOGIN FORM WITH VALIDATIONS -->
       <form id="formStudentLogin" onsubmit="handleStudentLogin(event)">
         <div class="form-group">
-          <label class="form-label">Student Name / Roll No. *</label>
+          <label class="form-label">Student Name *</label>
           <input type="text" id="sName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">College Email ID (*@iiitvadodara.ac.in) *</label>
+          <input type="email" id="sEmail" class="form-input" placeholder="e.g. 202611042@iiitvadodara.ac.in" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">10-Digit Mobile Number *</label>
+          <input type="tel" id="sPhone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" required>
         </div>
 
         <div class="form-row">
@@ -751,18 +761,31 @@
 
     async function handleStudentLogin(e) {
       if (e) e.preventDefault();
-      const name = document.getElementById('sName').value.trim() || 'Student';
-      const room = document.getElementById('sRoom').value.trim() || '304';
+      const name = document.getElementById('sName').value.trim();
+      const email = document.getElementById('sEmail').value.trim();
+      const phone = document.getElementById('sPhone').value.trim();
+      const room = document.getElementById('sRoom').value.trim();
       const block = document.getElementById('sBlock').value;
 
-      currentUser = { role: 'STUDENT', name, room, block };
+      // 1. Email Domain Validation: Must end with @iiitvadodara.ac.in
+      if (!email.toLowerCase().endsWith('@iiitvadodara.ac.in')) {
+        return alert('❌ Invalid Email! Please enter your official college email ID ending with @iiitvadodara.ac.in');
+      }
+
+      // 2. Phone Number Validation: Must be exactly 10 digits
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(phone)) {
+        return alert('❌ Invalid Mobile Number! Please enter a valid 10-digit mobile number.');
+      }
+
+      currentUser = { role: 'STUDENT', name, email, phone, room, block };
       
       // Async Save to CockroachDB via Netlify Serverless Function
       try {
         fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, roomNumber: room, hostelBlock: block, role: 'STUDENT' })
+          body: JSON.stringify({ name, email, phone, roomNumber: room, hostelBlock: block, role: 'STUDENT' })
         }).then(r => r.json()).then(data => console.log('Netlify DB Sync Success:', data)).catch(err => console.log('DB sync:', err));
       } catch (err) {}
 
