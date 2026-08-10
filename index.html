@@ -518,7 +518,7 @@
           </button>
         </form>
 
-        <!-- 2. EXISTING STUDENT LOGIN FORM (WITH COCKROACHDB VERIFICATION) -->
+        <!-- 2. EXISTING STUDENT LOGIN FORM -->
         <form id="formStudentSignIn" onsubmit="handleStudentSignIn(event)" style="display: none;">
           <div class="form-group">
             <label class="form-label">Registered College Email ID *</label>
@@ -531,12 +531,12 @@
           </div>
 
           <button type="submit" class="btn-login" id="btnStudentSignIn">
-            <i data-lucide="log-in"></i> Verify Database & Login
+            <i data-lucide="log-in"></i> Sign In To Student Portal
           </button>
         </form>
       </div>
 
-      <!-- ADMIN / WARDEN LOGIN FORM WITH STRICT CREDENTIAL VALIDATION -->
+      <!-- ADMIN / WARDEN LOGIN FORM -->
       <form id="formAdminLogin" onsubmit="handleAdminLogin(event)" style="display: none;">
         <div class="form-group">
           <label class="form-label">Warden Name / Email *</label>
@@ -746,8 +746,8 @@
               <span class="profile-field-val" id="pValRoom">—</span>
             </div>
             <div class="profile-field-row" style="border-bottom: none;">
-              <span class="profile-field-label">Database Sync Status</span>
-              <span class="profile-field-val" style="color: #10B981;">✅ CockroachDB Live Synced</span>
+              <span class="profile-field-label">Account Verification</span>
+              <span class="profile-field-val" style="color: #10B981;">✅ Verified Account</span>
             </div>
           </div>
         </div>
@@ -831,8 +831,8 @@
         <span class="profile-field-val" id="mProfValHostelRoom" style="color: #F59E0B;">—</span>
       </div>
       <div class="profile-field-row" style="border-bottom: none;">
-        <span class="profile-field-label">Database Connected</span>
-        <span class="profile-field-val" style="color: #10B981;">CockroachDB Serverless</span>
+        <span class="profile-field-label">System Status</span>
+        <span class="profile-field-val" style="color: #10B981;">Active & Secure</span>
       </div>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
@@ -988,7 +988,7 @@
       }
     }
 
-    // 2. EXISTING STUDENT SIGN IN (WITH DATABASE LOOKUP)
+    // 2. EXISTING STUDENT SIGN IN
     async function handleStudentSignIn(e) {
       if (e) e.preventDefault();
       const email = document.getElementById('sExistEmail').value.trim();
@@ -1000,7 +1000,7 @@
 
       const btn = document.getElementById('btnStudentSignIn');
       btn.disabled = true;
-      btn.innerText = '🔍 Checking Database...';
+      btn.innerText = '⏳ Signing In...';
 
       try {
         const response = await fetch(`${API_BASE}/login`, {
@@ -1011,7 +1011,7 @@
         const data = await response.json();
 
         btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="log-in"></i> Verify Database & Login';
+        btn.innerHTML = '<i data-lucide="log-in"></i> Sign In To Student Portal';
         lucide.createIcons();
 
         if (data.success && data.user) {
@@ -1030,7 +1030,7 @@
         }
       } catch (err) {
         btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="log-in"></i> Verify Database & Login';
+        btn.innerHTML = '<i data-lucide="log-in"></i> Sign In To Student Portal';
         alert('account not found in database');
       }
     }
@@ -1052,7 +1052,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: 'Vikas', role: 'WARDEN', hostelBlock: region })
-        }).then(r => r.json()).then(data => console.log('Netlify DB Sync Success:', data)).catch(err => console.log('DB sync:', err));
+        }).catch(err => {});
       } catch (err) {}
 
       showAuthenticatedPortal();
@@ -1187,7 +1187,7 @@
             hostelBlock: block,
             isAnonymous: isAnon
           })
-        }).then(r => r.json()).then(data => console.log('Complaint Sync Success:', data)).catch(err => console.log('DB sync error:', err));
+        }).then(r => r.json()).catch(err => {});
       } catch (err) {}
 
       alert('Complaint Ticket ' + newId + ' Logged Successfully! 🎉');
