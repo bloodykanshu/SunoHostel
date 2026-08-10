@@ -1011,12 +1011,12 @@
           };
           showAuthenticatedPortal();
         } else {
-          alert('❌ Account not found in CockroachDB database!\n\nPlease click "New Student (Register)" to create your account first.');
+          alert('account not found in database');
         }
       } catch (err) {
         btn.disabled = false;
         btn.innerHTML = '<i data-lucide="log-in"></i> Verify Database & Login';
-        alert('❌ Database Connection Error! Please try again.');
+        alert('account not found in database');
       }
     }
 
