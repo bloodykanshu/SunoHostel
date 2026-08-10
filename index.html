@@ -543,12 +543,12 @@
       <form id="formAdminLogin" onsubmit="handleAdminLogin(event)" style="display: none;">
         <div class="form-group">
           <label class="form-label">Warden Name / Email *</label>
-          <input type="text" id="aEmail" class="form-input" placeholder="Enter warden name" required>
+          <input type="text" id="aEmail" class="form-input" placeholder="Enter warden name (e.g. Vikas)" required>
         </div>
 
         <div class="form-group">
           <label class="form-label">Admin Security Passcode *</label>
-          <input type="password" id="aPasscode" class="form-input" placeholder="Enter security passcode" required>
+          <input type="password" id="aPasscode" class="form-input" placeholder="Enter security passcode (Diu@kevdi@vikas)" required>
         </div>
 
         <div class="form-group">
@@ -1059,13 +1059,33 @@
       const passcode = document.getElementById('aPasscode').value.trim();
       const region = document.getElementById('aRegion').value || 'All Hostels';
 
-      if (nameInput.toLowerCase() !== 'vikas' || passcode !== 'Diu@kevdi@vikas') {
-        return alert('only authorized user can log in');
+      try {
+        const response = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: nameInput, password: passcode })
+        });
+        const data = await response.json();
+
+        if (data.success && data.user) {
+          currentUser = {
+            role: 'ADMIN',
+            name: data.user.name || 'Vikas',
+            email: data.user.email || 'vikas',
+            phone: data.user.phone || '+91 99000 11223',
+            title: region
+          };
+          showAuthenticatedPortal();
+          return;
+        }
+      } catch (err) {}
+
+      if (nameInput.toLowerCase() === 'vikas' && passcode === 'Diu@kevdi@vikas') {
+        currentUser = { role: 'ADMIN', name: 'Vikas', email: 'vikas', phone: '+91 99000 11223', title: region };
+        showAuthenticatedPortal();
+      } else {
+        alert('only authorized user can log in');
       }
-
-      currentUser = { role: 'ADMIN', name: 'Vikas', email: 'vikas.warden@sunohostel.edu', phone: '+91 99000 11223', title: region };
-
-      showAuthenticatedPortal();
     }
 
     function handleLogout() {
