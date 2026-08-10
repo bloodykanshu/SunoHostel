@@ -1,8 +1,27 @@
-const { Client } = require('pg');
+const { MongoClient } = require('mongodb');
 
-const DB_URL = "postgresql://akansh:ex19f2XS4KkMOyi8SUQNdQ@low-mole-19506.jxf.gcp-asia-south1.cockroachlabs.cloud:26257/sunohostelprod?sslmode=verify-full";
+const MONGODB_URI = "mongodb+srv://rinshuyadav3_db_user:pb87d013WKdxct0c@sunohostel.2sasybh.mongodb.net/sunohostel?retryWrites=true&w=majority&appName=Sunohostel";
+
+let cachedClient = null;
+let cachedDb = null;
+
+async function connectToDatabase() {
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
+  const client = new MongoClient(MONGODB_URI);
+  await client.connect();
+  const db = client.db('sunohostel');
+
+  cachedClient = client;
+  cachedDb = db;
+  return { client, db };
+}
 
 exports.handler = async (event, context) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -14,27 +33,21 @@ exports.handler = async (event, context) => {
     return { statusCode: 200, headers, body: '' };
   }
 
-  const client = new Client({
-    connectionString: DB_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-
   try {
-    await client.connect();
+    const { db } = await connectToDatabase();
     const body = event.body ? JSON.parse(event.body) : {};
+
+    const usersCol = db.collection('users');
+    const complaintsCol = db.collection('complaints');
 
     // 1. EXISTING STUDENT LOGIN & EXACT PASSWORD VERIFICATION
     if (event.path.includes('login')) {
-      const email = body.email ? body.email.trim() : '';
+      const email = body.email ? body.email.trim().toLowerCase() : '';
       const password = body.password ? body.password.trim() : '';
 
-      const res = await client.query(`
-        SELECT * FROM users WHERE LOWER(email) = LOWER($1);
-      `, [email]);
+      const user = await usersCol.findOne({ email });
 
-      await client.end();
-
-      if (res.rows.length === 0) {
+      if (!user) {
         return {
           statusCode: 404,
           headers,
@@ -42,8 +55,7 @@ exports.handler = async (event, context) => {
         };
       }
 
-      const user = res.rows[0];
-      const storedPassword = user.passwordhash || user.password;
+      const storedPassword = user.passwordHash || user.password;
 
       if (storedPassword && storedPassword !== password) {
         return {
@@ -62,22 +74,19 @@ exports.handler = async (event, context) => {
 
     // 2. FETCH ALL COMPLAINTS FOR WARDEN & TRACKER
     if (event.path.includes('complaints') && event.httpMethod === 'GET') {
-      const res = await client.query(`
-        SELECT * FROM complaints ORDER BY createdAt DESC;
-      `);
-      await client.end();
+      const complaintsDocs = await complaintsCol.find({}).sort({ createdAt: -1 }).toArray();
 
-      const complaints = res.rows.map(r => ({
-        id: r.ticketid || r.id,
+      const complaints = complaintsDocs.map(r => ({
+        id: r.ticketId || r._id.toString(),
         title: r.title,
         category: r.category,
-        room: r.roomnumber,
-        block: r.hostelblock,
+        room: r.roomNumber,
+        block: r.hostelBlock,
         urgency: r.urgency,
-        status: r.status,
-        staff: r.assignedstaff,
-        isAnon: r.isanonymous,
-        studentName: r.isanonymous ? 'Anonymous Student' : 'Student'
+        status: r.status || 'PENDING',
+        staff: r.assignedStaff,
+        isAnon: r.isAnonymous,
+        studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student')
       }));
 
       return {
@@ -87,7 +96,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 3. SUBMIT NEW COMPLAINT TO COCKROACHDB
+    // 3. SUBMIT NEW COMPLAINT TO MONGODB
     if (event.path.includes('complaints') && event.httpMethod === 'POST') {
       const ticketId = body.ticketId || ('SH-2026-' + Math.floor(1000 + Math.random() * 9000));
       const title = body.title || 'General Complaint';
@@ -98,29 +107,40 @@ exports.handler = async (event, context) => {
       const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
       const isAnonymous = body.isAnonymous || false;
 
-      const res = await client.query(`
-        INSERT INTO complaints (ticketId, title, description, category, urgency, roomNumber, hostelBlock, isAnonymous, status)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PENDING')
-        RETURNING *;
-      `, [ticketId, title, description, category, urgency, roomNumber, hostelBlock, isAnonymous]);
+      const newComplaint = {
+        ticketId,
+        title,
+        description,
+        category,
+        urgency,
+        roomNumber,
+        hostelBlock,
+        isAnonymous,
+        status: 'PENDING',
+        createdAt: new Date()
+      };
 
-      await client.end();
+      await complaintsCol.insertOne(newComplaint);
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ success: true, complaint: res.rows[0] })
+        body: JSON.stringify({ success: true, complaint: newComplaint })
       };
     }
 
     // 4. UPDATE COMPLAINT STATUS OR ASSIGN STAFF
     if (event.path.includes('update-ticket')) {
       const { ticketId, status, staff } = body;
-      await client.query(`
-        UPDATE complaints SET status = COALESCE($1, status), assignedStaff = COALESCE($2, assignedStaff)
-        WHERE ticketId = $3;
-      `, [status, staff, ticketId]);
+      const updateFields = {};
+      if (status) updateFields.status = status;
+      if (staff) updateFields.assignedStaff = staff;
 
-      await client.end();
+      await complaintsCol.updateOne(
+        { ticketId },
+        { $set: updateFields }
+      );
+
       return {
         statusCode: 200,
         headers,
@@ -134,60 +154,60 @@ exports.handler = async (event, context) => {
       const roomNumber = body.roomNumber || '304';
       const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
       const role = body.role || 'STUDENT';
-      const email = body.email ? body.email.trim() : '';
+      const email = body.email ? body.email.trim().toLowerCase() : '';
       const phone = body.phone ? body.phone.trim() : '';
       const password = body.password ? body.password.trim() : 'pass_123';
 
       if (email || phone) {
-        const checkRes = await client.query(`
-          SELECT email, phone FROM users WHERE LOWER(email) = LOWER($1) OR phone = $2;
-        `, [email, phone]);
+        const existingEmail = await usersCol.findOne({ email });
+        if (existingEmail) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ success: false, error: "this email is already registered" })
+          };
+        }
 
-        if (checkRes.rows.length > 0) {
-          const matched = checkRes.rows[0];
-          await client.end();
-          if (matched.email && matched.email.toLowerCase() === email.toLowerCase()) {
-            return {
-              statusCode: 400,
-              headers,
-              body: JSON.stringify({ success: false, error: "this email is already registered" })
-            };
-          }
-          if (matched.phone && matched.phone === phone) {
-            return {
-              statusCode: 400,
-              headers,
-              body: JSON.stringify({ success: false, error: "this phone number is already registered" })
-            };
-          }
+        const existingPhone = await usersCol.findOne({ phone });
+        if (existingPhone) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ success: false, error: "this phone number is already registered" })
+          };
         }
       }
 
       const rollNumber = '2026' + Math.floor(1000 + Math.random() * 9000);
 
-      const res = await client.query(`
-        INSERT INTO users (name, email, phone, passwordHash, role, hostelBlock, roomNumber, rollNumber)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *;
-      `, [name, email, phone, password, role, hostelBlock, roomNumber, rollNumber]);
+      const newUser = {
+        name,
+        email,
+        phone,
+        passwordHash: password,
+        role,
+        hostelBlock,
+        roomNumber,
+        rollNumber,
+        createdAt: new Date()
+      };
 
-      await client.end();
+      await usersCol.insertOne(newUser);
+
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({ success: true, user: res.rows[0] })
+        body: JSON.stringify({ success: true, user: newUser })
       };
     }
 
-    await client.end();
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({ status: "Netlify CockroachDB API Active" })
+      body: JSON.stringify({ status: "Netlify MongoDB Atlas API Active" })
     };
   } catch (err) {
-    console.error("Netlify Function DB Error:", err);
-    try { await client.end(); } catch (e) {}
+    console.error("Netlify Function MongoDB Error:", err);
     return {
       statusCode: 500,
       headers,

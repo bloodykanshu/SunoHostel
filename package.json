@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "mongodb": "^7.5.0",
     "pg": "^8.13.1"
   }
 }
