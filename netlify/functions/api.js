@@ -60,7 +60,75 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 2. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
+    // 2. FETCH ALL COMPLAINTS FOR WARDEN & TRACKER
+    if (event.path.includes('complaints') && event.httpMethod === 'GET') {
+      const res = await client.query(`
+        SELECT * FROM complaints ORDER BY createdAt DESC;
+      `);
+      await client.end();
+
+      const complaints = res.rows.map(r => ({
+        id: r.ticketid || r.id,
+        title: r.title,
+        category: r.category,
+        room: r.roomnumber,
+        block: r.hostelblock,
+        urgency: r.urgency,
+        status: r.status,
+        staff: r.assignedstaff,
+        isAnon: r.isanonymous,
+        studentName: r.isanonymous ? 'Anonymous Student' : 'Student'
+      }));
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, complaints })
+      };
+    }
+
+    // 3. SUBMIT NEW COMPLAINT TO COCKROACHDB
+    if (event.path.includes('complaints') && event.httpMethod === 'POST') {
+      const ticketId = body.ticketId || ('SH-2026-' + Math.floor(1000 + Math.random() * 9000));
+      const title = body.title || 'General Complaint';
+      const description = body.description || '';
+      const category = body.category || 'OTHERS';
+      const urgency = body.urgency || 'NORMAL';
+      const roomNumber = body.roomNumber || '304';
+      const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
+      const isAnonymous = body.isAnonymous || false;
+
+      const res = await client.query(`
+        INSERT INTO complaints (ticketId, title, description, category, urgency, roomNumber, hostelBlock, isAnonymous, status)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'PENDING')
+        RETURNING *;
+      `, [ticketId, title, description, category, urgency, roomNumber, hostelBlock, isAnonymous]);
+
+      await client.end();
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, complaint: res.rows[0] })
+      };
+    }
+
+    // 4. UPDATE COMPLAINT STATUS OR ASSIGN STAFF
+    if (event.path.includes('update-ticket')) {
+      const { ticketId, status, staff } = body;
+      await client.query(`
+        UPDATE complaints SET status = COALESCE($1, status), assignedStaff = COALESCE($2, assignedStaff)
+        WHERE ticketId = $3;
+      `, [status, staff, ticketId]);
+
+      await client.end();
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true })
+      };
+    }
+
+    // 5. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
     if (event.path.includes('register-sync') || event.path.includes('api')) {
       const name = body.name || 'Student User';
       const roomNumber = body.roomNumber || '304';
@@ -70,7 +138,6 @@ exports.handler = async (event, context) => {
       const phone = body.phone ? body.phone.trim() : '';
       const password = body.password ? body.password.trim() : 'pass_123';
 
-      // Check duplicate Email or Phone Number
       if (email || phone) {
         const checkRes = await client.query(`
           SELECT email, phone FROM users WHERE LOWER(email) = LOWER($1) OR phone = $2;

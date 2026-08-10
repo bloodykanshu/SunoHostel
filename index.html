@@ -398,6 +398,9 @@
     th { background: rgba(15, 23, 42, 0.9); padding: 14px 18px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
     td { padding: 16px 18px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
     .badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; display: inline-block; }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid #F59E0B; }
+    .badge-progress { background: rgba(139, 92, 246, 0.15); color: #A78BFA; border: 1px solid #8B5CF6; }
+    .badge-resolved { background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; }
 
     .action-btn { padding: 6px 12px; border-radius: 6px; border: none; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
     .btn-assign { background: #3B82F6; color: #FFF; }
@@ -674,7 +677,7 @@
               <textarea id="formDesc" class="form-textarea" placeholder="Explain exact location and problem details..."></textarea>
             </div>
 
-            <button class="btn-login" onclick="submitComplaintForm()">
+            <button class="btn-login" onclick="submitComplaintForm()" id="btnSubmitComplaint">
               <i data-lucide="send"></i> Submit Ticket To Warden
             </button>
           </div>
@@ -941,7 +944,21 @@
       document.getElementById('formStudentSignIn').style.display = mode === 'EXISTING' ? 'block' : 'none';
     }
 
-    // 1. NEW STUDENT REGISTRATION WITH DUPLICATE CHECK & REAL PASSWORD
+    // FETCH COMPLAINTS FROM COCKROACHDB API
+    async function fetchComplaintsFromDB() {
+      try {
+        const res = await fetch(`${API_BASE}/complaints`);
+        const data = await res.json();
+        if (data.success && data.complaints) {
+          tickets = data.complaints;
+        }
+      } catch (err) {
+        console.log('Error loading complaints:', err);
+      }
+      renderAll();
+    }
+
+    // 1. NEW STUDENT REGISTRATION
     async function handleStudentRegister(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('sName').value.trim();
@@ -989,7 +1006,7 @@
       }
     }
 
-    // 2. EXISTING STUDENT SIGN IN (WITH STRICT PASSWORD MATCHING)
+    // 2. EXISTING STUDENT SIGN IN
     async function handleStudentSignIn(e) {
       if (e) e.preventDefault();
       const email = document.getElementById('sExistEmail').value.trim();
@@ -1048,14 +1065,6 @@
 
       currentUser = { role: 'ADMIN', name: 'Vikas', email: 'vikas.warden@sunohostel.edu', phone: '+91 99000 11223', title: region };
 
-      try {
-        fetch(`${API_BASE}/register-sync`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: 'Vikas', role: 'WARDEN', hostelBlock: region })
-        }).catch(err => {});
-      } catch (err) {}
-
       showAuthenticatedPortal();
     }
 
@@ -1066,7 +1075,7 @@
       document.getElementById('navUserBox').style.display = 'none';
     }
 
-    function showAuthenticatedPortal() {
+    async function showAuthenticatedPortal() {
       document.getElementById('loginScreenView').style.display = 'none';
       document.getElementById('authenticatedAppView').style.display = 'block';
       document.getElementById('navUserBox').style.display = 'flex';
@@ -1103,7 +1112,7 @@
       }
 
       updateProfileData();
-      renderAll();
+      await fetchComplaintsFromDB();
     }
 
     function setStudentTab(tab) {
@@ -1158,6 +1167,10 @@
 
       if (!title || !desc) return alert('Please enter issue title and description.');
 
+      const btn = document.getElementById('btnSubmitComplaint');
+      btn.disabled = true;
+      btn.innerText = '⏳ Submitting Ticket...';
+
       const newId = 'SH-2026-' + Math.floor(1000 + Math.random() * 9000);
       const ticketObj = {
         id: newId,
@@ -1172,10 +1185,8 @@
         studentName: isAnon ? 'Anonymous Student' : currentUser?.name || 'Student'
       };
 
-      tickets.unshift(ticketObj);
-
       try {
-        fetch(`${API_BASE}/complaints`, {
+        await fetch(`${API_BASE}/complaints`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1188,15 +1199,19 @@
             hostelBlock: block,
             isAnonymous: isAnon
           })
-        }).then(r => r.json()).catch(err => {});
+        });
       } catch (err) {}
+
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="send"></i> Submit Ticket To Warden';
+      lucide.createIcons();
 
       alert('Complaint Ticket ' + newId + ' Logged Successfully! 🎉');
       document.getElementById('formTitle').value = '';
       document.getElementById('formDesc').value = '';
       document.getElementById('formAnonymous').checked = false;
 
-      renderAll();
+      await fetchComplaintsFromDB();
       setStudentTab('TRACKER');
     }
 
@@ -1380,21 +1395,35 @@
       document.getElementById('modalNotice').style.display = 'none';
     }
 
-    function saveStaffAssignment() {
+    async function saveStaffAssignment() {
       const name = document.getElementById('assignStaffName').value.trim();
       const phone = document.getElementById('assignStaffPhone').value.trim();
       if (!name || !phone) return alert('Please enter staff name and phone number.');
-      const t = tickets.find(x => x.id === selectedTicketId);
-      if (t) { t.status = 'IN_PROGRESS'; t.staff = name + ' • ' + phone; }
+      const staffInfo = name + ' • ' + phone;
+      
+      try {
+        await fetch(`${API_BASE}/update-ticket`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticketId: selectedTicketId, status: 'IN_PROGRESS', staff: staffInfo })
+        });
+      } catch (e) {}
+
       closeModals();
-      renderAll();
+      await fetchComplaintsFromDB();
     }
 
-    function saveResolution() {
-      const t = tickets.find(x => x.id === selectedTicketId);
-      if (t) { t.status = 'RESOLVED'; }
+    async function saveResolution() {
+      try {
+        await fetch(`${API_BASE}/update-ticket`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticketId: selectedTicketId, status: 'RESOLVED' })
+        });
+      } catch (e) {}
+
       closeModals();
-      renderAll();
+      await fetchComplaintsFromDB();
     }
 
     function publishNotice() {
