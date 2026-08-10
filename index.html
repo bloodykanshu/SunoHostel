@@ -90,6 +90,12 @@
       border: 1px solid var(--border-color);
       padding: 6px 14px;
       border-radius: 20px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .user-badge:hover {
+      background: rgba(99, 102, 241, 0.15);
+      border-color: rgba(99, 102, 241, 0.4);
     }
 
     .btn-logout {
@@ -334,6 +340,24 @@
       margin-bottom: 16px;
     }
 
+    /* Profile Card Styling */
+    .profile-field-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .profile-field-label {
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .profile-field-val {
+      color: #F8FAFC;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
     /* Admin Metrics & Table */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .stat-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; }
@@ -352,7 +376,7 @@
 
     /* Modals */
     .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
-    .modal-card { background: #1E293B; border: 1px solid var(--border-color); border-radius: 18px; width: 480px; padding: 24px; }
+    .modal-card { background: #1E293B; border: 1px solid var(--border-color); border-radius: 18px; width: 500px; padding: 24px; max-width: 90%; }
     
     .empty-state {
       text-align: center;
@@ -373,15 +397,15 @@
       </div>
     </a>
 
-    <!-- Logged in User Profile Info -->
+    <!-- Logged in User Profile Info (Clickable for Full Profile) -->
     <div id="navUserBox" style="display: none;">
-      <div class="user-badge">
+      <div class="user-badge" onclick="openProfileModal()" title="Click to view full profile">
         <span id="userBadgeRoleIcon">🎓</span>
         <div>
           <div style="font-size: 13px; font-weight: 700; color: #FFF;" id="userNameDisplay"></div>
           <div style="font-size: 11px; color: var(--text-muted);" id="userSubDisplay"></div>
         </div>
-        <button class="btn-logout" onclick="handleLogout()" style="margin-left: 8px;">
+        <button class="btn-logout" onclick="event.stopPropagation(); handleLogout()" style="margin-left: 8px;">
           <i data-lucide="log-out" style="width: 14px; height: 14px;"></i> Logout
         </button>
       </div>
@@ -516,6 +540,9 @@
         <button class="tab-btn" id="tMess" onclick="setStudentTab('MESS')">
           <i data-lucide="utensils"></i> Mess Menu & Voting
         </button>
+        <button class="tab-btn" id="tProfile" onclick="setStudentTab('PROFILE')">
+          <i data-lucide="user-check"></i> My Profile
+        </button>
       </div>
     </header>
 
@@ -625,6 +652,47 @@
           <div id="messMenuGrid" class="grid-2col"></div>
         </div>
 
+        <!-- TAB 5: MY PROFILE VIEW -->
+        <div id="tabContentProfile" style="display: none;">
+          <div class="card" style="max-width: 680px; margin: 0 auto;">
+            <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+              <div style="width: 72px; height: 72px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 36px; box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);">
+                🎓
+              </div>
+              <div>
+                <h2 style="font-size: 22px; font-weight: 800;" id="profFullname">—</h2>
+                <div style="font-size: 13px; color: #38BDF8; font-weight: 700; margin-top: 2px;" id="profSubhead">Student Profile</div>
+                <span class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid #10B981; margin-top: 6px;">Verified Active Student</span>
+              </div>
+            </div>
+
+            <div class="profile-field-row">
+              <span class="profile-field-label">Full Student Name</span>
+              <span class="profile-field-val" id="pValName">—</span>
+            </div>
+            <div class="profile-field-row">
+              <span class="profile-field-label">College Email ID</span>
+              <span class="profile-field-val" id="pValEmail" style="color: #818CF8;">—</span>
+            </div>
+            <div class="profile-field-row">
+              <span class="profile-field-label">10-Digit Mobile Number</span>
+              <span class="profile-field-val" id="pValPhone">—</span>
+            </div>
+            <div class="profile-field-row">
+              <span class="profile-field-label">Assigned Hostel Block</span>
+              <span class="profile-field-val" id="pValBlock" style="color: #F59E0B;">—</span>
+            </div>
+            <div class="profile-field-row">
+              <span class="profile-field-label">Room Number</span>
+              <span class="profile-field-val" id="pValRoom">—</span>
+            </div>
+            <div class="profile-field-row" style="border-bottom: none;">
+              <span class="profile-field-label">Database Sync Status</span>
+              <span class="profile-field-val" style="color: #10B981;">✅ CockroachDB Live Synced</span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- WARDEN / ADMIN PORTAL -->
@@ -667,6 +735,51 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- MODAL: MY PROFILE POPUP -->
+  <div class="modal-overlay" id="modalProfile">
+    <div class="modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 18px; font-weight: 800; color: #FFF;">User Profile Card 👤</h3>
+        <button onclick="closeModals()" style="background: transparent; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer;">✕</button>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 20px; background: rgba(15, 23, 42, 0.6); padding: 16px; border-radius: 14px; border: 1px solid var(--border-color);">
+        <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366F1, #8B5CF6); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px;" id="mProfIcon">
+          🎓
+        </div>
+        <div>
+          <div style="font-size: 17px; font-weight: 800; color: #FFF;" id="mProfName">—</div>
+          <div style="font-size: 12px; color: #38BDF8; font-weight: 700;" id="mProfRole">—</div>
+        </div>
+      </div>
+
+      <div class="profile-field-row">
+        <span class="profile-field-label">Name</span>
+        <span class="profile-field-val" id="mProfValName">—</span>
+      </div>
+      <div class="profile-field-row">
+        <span class="profile-field-label">College Email</span>
+        <span class="profile-field-val" id="mProfValEmail" style="color: #818CF8;">—</span>
+      </div>
+      <div class="profile-field-row">
+        <span class="profile-field-label">Mobile Number</span>
+        <span class="profile-field-val" id="mProfValPhone">—</span>
+      </div>
+      <div class="profile-field-row">
+        <span class="profile-field-label">Hostel & Room</span>
+        <span class="profile-field-val" id="mProfValHostelRoom" style="color: #F59E0B;">—</span>
+      </div>
+      <div class="profile-field-row" style="border-bottom: none;">
+        <span class="profile-field-label">Database Connected</span>
+        <span class="profile-field-val" style="color: #10B981;">CockroachDB Serverless</span>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+        <button class="action-btn" style="background: var(--primary); color: #FFF; padding: 10px 20px; border-radius: 10px;" onclick="closeModals()">Close Profile</button>
+      </div>
+    </div>
   </div>
 
   <!-- MODAL: ASSIGN STAFF -->
@@ -803,7 +916,7 @@
         return alert('only authorized user can log in');
       }
 
-      currentUser = { role: 'ADMIN', name: 'Vikas', title: region };
+      currentUser = { role: 'ADMIN', name: 'Vikas', email: 'vikas.warden@sunohostel.edu', phone: '+91 99000 11223', title: region };
 
       // Async Save to CockroachDB via Netlify Serverless Function
       try {
@@ -860,15 +973,45 @@
         document.getElementById('portalDescText').innerText = 'Manage tickets, assign staff duties, verify resolution proofs, & broadcast digital notices.';
       }
 
+      updateProfileData();
       renderAll();
     }
 
     function setStudentTab(tab) {
-      ['Report', 'Tracker', 'Notices', 'Mess'].forEach(t => {
+      ['Report', 'Tracker', 'Notices', 'Mess', 'Profile'].forEach(t => {
         const active = (t.toUpperCase() === tab);
-        document.getElementById('tabContent' + t).style.display = active ? (t === 'Report' ? 'grid' : 'block') : 'none';
-        document.getElementById('t' + t).classList.toggle('active', active);
+        const el = document.getElementById('tabContent' + t);
+        if (el) el.style.display = active ? (t === 'Report' ? 'grid' : 'block') : 'none';
+        const btn = document.getElementById('t' + t);
+        if (btn) btn.classList.toggle('active', active);
       });
+      if (tab === 'PROFILE') updateProfileData();
+    }
+
+    function updateProfileData() {
+      if (!currentUser) return;
+      // Tab 5 Profile
+      document.getElementById('profFullname').innerText = currentUser.name || 'Student';
+      document.getElementById('profSubhead').innerText = currentUser.role === 'STUDENT' ? `Room ${currentUser.room} • ${currentUser.block}` : currentUser.title;
+      document.getElementById('pValName').innerText = currentUser.name || 'N/A';
+      document.getElementById('pValEmail').innerText = currentUser.email || 'N/A';
+      document.getElementById('pValPhone').innerText = currentUser.phone || 'N/A';
+      document.getElementById('pValBlock').innerText = currentUser.block || currentUser.title || 'N/A';
+      document.getElementById('pValRoom').innerText = currentUser.room ? `Room ${currentUser.room}` : 'Warden Admin Office';
+
+      // Modal Profile
+      document.getElementById('mProfIcon').innerText = currentUser.role === 'STUDENT' ? '🎓' : '🛡️';
+      document.getElementById('mProfName').innerText = currentUser.name || 'User';
+      document.getElementById('mProfRole').innerText = currentUser.role === 'STUDENT' ? 'Verified Student' : 'Chief Hostel Warden';
+      document.getElementById('mProfValName').innerText = currentUser.name || 'N/A';
+      document.getElementById('mProfValEmail').innerText = currentUser.email || 'N/A';
+      document.getElementById('mProfValPhone').innerText = currentUser.phone || 'N/A';
+      document.getElementById('mProfValHostelRoom').innerText = currentUser.room ? `${currentUser.block} (Room ${currentUser.room})` : currentUser.title;
+    }
+
+    function openProfileModal() {
+      updateProfileData();
+      document.getElementById('modalProfile').style.display = 'flex';
     }
 
     function selectUrgency(u) {
@@ -1105,6 +1248,7 @@
     }
 
     function closeModals() {
+      document.getElementById('modalProfile').style.display = 'none';
       document.getElementById('modalAssign').style.display = 'none';
       document.getElementById('modalResolve').style.display = 'none';
       document.getElementById('modalNotice').style.display = 'none';
