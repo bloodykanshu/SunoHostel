@@ -907,7 +907,7 @@
 
   <!-- LOGIC SCRIPT -->
   <script>
-    const API_BASE = '/.netlify/functions/api';
+    const API_BASE = '/api';
     
     let tickets = [];
     let notices = [];
@@ -944,7 +944,7 @@
       document.getElementById('formStudentSignIn').style.display = mode === 'EXISTING' ? 'block' : 'none';
     }
 
-    // FETCH COMPLAINTS FROM COCKROACHDB API
+    // FETCH COMPLAINTS FROM API
     async function fetchComplaintsFromDB() {
       try {
         const res = await fetch(`${API_BASE}/complaints`);
@@ -1172,18 +1172,6 @@
       btn.innerText = '⏳ Submitting Ticket...';
 
       const newId = 'SH-2026-' + Math.floor(1000 + Math.random() * 9000);
-      const ticketObj = {
-        id: newId,
-        title,
-        category,
-        room,
-        block,
-        urgency: currentUrgency,
-        status: 'PENDING',
-        staff: null,
-        isAnon,
-        studentName: isAnon ? 'Anonymous Student' : currentUser?.name || 'Student'
-      };
 
       try {
         await fetch(`${API_BASE}/complaints`, {
