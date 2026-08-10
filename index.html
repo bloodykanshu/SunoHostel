@@ -800,7 +800,7 @@
 
       // Strict Admin Credential Validation: Name = Vikas, Password = Diu@kevdi@vikas
       if (nameInput.toLowerCase() !== 'vikas' || passcode !== 'Diu@kevdi@vikas') {
-        return alert('❌ Invalid Admin Credentials!\nAccess Denied: Only authorized Warden Vikas can log into the Warden Console.');
+        return alert('only authorized user can log in');
       }
 
       currentUser = { role: 'ADMIN', name: 'Vikas', title: region };
