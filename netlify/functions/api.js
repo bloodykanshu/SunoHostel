@@ -79,6 +79,7 @@ exports.handler = async (event, context) => {
       const complaints = complaintsDocs.map(r => ({
         id: r.ticketId || r._id.toString(),
         title: r.title,
+        description: r.description || '',
         category: r.category,
         room: r.roomNumber,
         block: r.hostelBlock,
@@ -86,7 +87,11 @@ exports.handler = async (event, context) => {
         status: r.status || 'PENDING',
         staff: r.assignedStaff,
         isAnon: r.isAnonymous,
-        studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student')
+        studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student'),
+        supports: r.supports || (r.upvotedBy ? r.upvotedBy.length : 0),
+        opposes: r.opposes || (r.downvotedBy ? r.downvotedBy.length : 0),
+        upvotedBy: r.upvotedBy || [],
+        downvotedBy: r.downvotedBy || []
       }));
 
       return {
@@ -117,6 +122,10 @@ exports.handler = async (event, context) => {
         hostelBlock,
         isAnonymous,
         status: 'PENDING',
+        supports: 0,
+        opposes: 0,
+        upvotedBy: [],
+        downvotedBy: [],
         createdAt: new Date()
       };
 
@@ -129,7 +138,82 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 4. UPDATE COMPLAINT STATUS OR ASSIGN STAFF
+    // 4. VOTE ON COMPLAINT (SUPPORT OR OPPOSE)
+    if (event.path.includes('vote-complaint')) {
+      const { ticketId, voteType, userEmail } = body;
+      if (!ticketId || !voteType || !userEmail) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ success: false, error: "missing parameters" })
+        };
+      }
+
+      const complaint = await complaintsCol.findOne({ ticketId });
+      if (!complaint) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ success: false, error: "complaint not found" })
+        };
+      }
+
+      let upvotedBy = complaint.upvotedBy || [];
+      let downvotedBy = complaint.downvotedBy || [];
+
+      const hasUpvoted = upvotedBy.includes(userEmail);
+      const hasDownvoted = downvotedBy.includes(userEmail);
+
+      if (voteType === 'SUPPORT') {
+        if (hasUpvoted) {
+          upvotedBy = upvotedBy.filter(e => e !== userEmail);
+        } else {
+          upvotedBy.push(userEmail);
+          if (hasDownvoted) {
+            downvotedBy = downvotedBy.filter(e => e !== userEmail);
+          }
+        }
+      } else if (voteType === 'OPPOSE') {
+        if (hasDownvoted) {
+          downvotedBy = downvotedBy.filter(e => e !== userEmail);
+        } else {
+          downvotedBy.push(userEmail);
+          if (hasUpvoted) {
+            upvotedBy = upvotedBy.filter(e => e !== userEmail);
+          }
+        }
+      }
+
+      const supportsCount = upvotedBy.length;
+      const opposesCount = downvotedBy.length;
+
+      await complaintsCol.updateOne(
+        { ticketId },
+        {
+          $set: {
+            supports: supportsCount,
+            opposes: opposesCount,
+            upvotedBy,
+            downvotedBy
+          }
+        }
+      );
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          ticketId,
+          supports: supportsCount,
+          opposes: opposesCount,
+          upvotedBy,
+          downvotedBy
+        })
+      };
+    }
+
+    // 5. UPDATE COMPLAINT STATUS OR ASSIGN STAFF
     if (event.path.includes('update-ticket')) {
       const { ticketId, status, staff } = body;
       const updateFields = {};
@@ -148,7 +232,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 5. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
+    // 6. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
     if (event.path.includes('register-sync') || event.path.includes('api')) {
       const name = body.name || 'Student User';
       const roomNumber = body.roomNumber || '304';
@@ -164,8 +248,8 @@ exports.handler = async (event, context) => {
           return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({ success: false, error: "this email is already registered" })
-          };
+            body: JSON.stringify({ success: false, error: "this email is already registered" });
+          }
         }
 
         const existingPhone = await usersCol.findOne({ phone });
@@ -173,8 +257,8 @@ exports.handler = async (event, context) => {
           return {
             statusCode: 400,
             headers,
-            body: JSON.stringify({ success: false, error: "this phone number is already registered" })
-          };
+            body: JSON.stringify({ success: false, error: "this phone number is already registered" });
+          }
         }
       }
 

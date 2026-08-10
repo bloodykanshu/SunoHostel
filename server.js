@@ -57,6 +57,7 @@ app.get('/api/complaints', async (req, res) => {
     const complaints = complaintsDocs.map(r => ({
       id: r.ticketId || r._id.toString(),
       title: r.title,
+      description: r.description || '',
       category: r.category,
       room: r.roomNumber,
       block: r.hostelBlock,
@@ -64,7 +65,11 @@ app.get('/api/complaints', async (req, res) => {
       status: r.status || 'PENDING',
       staff: r.assignedStaff,
       isAnon: r.isAnonymous,
-      studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student')
+      studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student'),
+      supports: r.supports || (r.upvotedBy ? r.upvotedBy.length : 0),
+      opposes: r.opposes || (r.downvotedBy ? r.downvotedBy.length : 0),
+      upvotedBy: r.upvotedBy || [],
+      downvotedBy: r.downvotedBy || []
     }));
 
     res.json({ success: true, complaints });
@@ -96,6 +101,10 @@ app.post('/api/complaints', async (req, res) => {
       hostelBlock,
       isAnonymous,
       status: 'PENDING',
+      supports: 0,
+      opposes: 0,
+      upvotedBy: [],
+      downvotedBy: [],
       createdAt: new Date()
     };
 
@@ -106,7 +115,75 @@ app.post('/api/complaints', async (req, res) => {
   }
 });
 
-// 4. UPDATE COMPLAINT STATUS OR ASSIGN STAFF
+// 4. VOTE ON COMPLAINT (SUPPORT OR OPPOSE)
+app.post('/api/vote-complaint', async (req, res) => {
+  try {
+    const db = await getDb();
+    const { ticketId, voteType, userEmail } = req.body;
+    if (!ticketId || !voteType || !userEmail) {
+      return res.status(400).json({ success: false, error: "missing parameters" });
+    }
+
+    const complaint = await db.collection('complaints').findOne({ ticketId });
+    if (!complaint) {
+      return res.status(404).json({ success: false, error: "complaint not found" });
+    }
+
+    let upvotedBy = complaint.upvotedBy || [];
+    let downvotedBy = complaint.downvotedBy || [];
+
+    const hasUpvoted = upvotedBy.includes(userEmail);
+    const hasDownvoted = downvotedBy.includes(userEmail);
+
+    if (voteType === 'SUPPORT') {
+      if (hasUpvoted) {
+        upvotedBy = upvotedBy.filter(e => e !== userEmail);
+      } else {
+        upvotedBy.push(userEmail);
+        if (hasDownvoted) {
+          downvotedBy = downvotedBy.filter(e => e !== userEmail);
+        }
+      }
+    } else if (voteType === 'OPPOSE') {
+      if (hasDownvoted) {
+        downvotedBy = downvotedBy.filter(e => e !== userEmail);
+      } else {
+        downvotedBy.push(userEmail);
+        if (hasUpvoted) {
+          upvotedBy = upvotedBy.filter(e => e !== userEmail);
+        }
+      }
+    }
+
+    const supportsCount = upvotedBy.length;
+    const opposesCount = downvotedBy.length;
+
+    await db.collection('complaints').updateOne(
+      { ticketId },
+      {
+        $set: {
+          supports: supportsCount,
+          opposes: opposesCount,
+          upvotedBy,
+          downvotedBy
+        }
+      }
+    );
+
+    res.json({
+      success: true,
+      ticketId,
+      supports: supportsCount,
+      opposes: opposesCount,
+      upvotedBy,
+      downvotedBy
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// 5. UPDATE COMPLAINT STATUS OR ASSIGN STAFF
 app.post('/api/update-ticket', async (req, res) => {
   try {
     const db = await getDb();
@@ -126,7 +203,7 @@ app.post('/api/update-ticket', async (req, res) => {
   }
 });
 
-// 5. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
+// 6. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
 app.post('/api/register-sync', async (req, res) => {
   try {
     const db = await getDb();
