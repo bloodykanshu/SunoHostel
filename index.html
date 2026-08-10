@@ -1090,12 +1090,17 @@
 
     function handleLogout() {
       currentUser = null;
+      localStorage.removeItem('sunohostel_session');
       document.getElementById('loginScreenView').style.display = 'flex';
       document.getElementById('authenticatedAppView').style.display = 'none';
       document.getElementById('navUserBox').style.display = 'none';
     }
 
     async function showAuthenticatedPortal() {
+      if (currentUser) {
+        localStorage.setItem('sunohostel_session', JSON.stringify(currentUser));
+      }
+
       document.getElementById('loginScreenView').style.display = 'none';
       document.getElementById('authenticatedAppView').style.display = 'block';
       document.getElementById('navUserBox').style.display = 'flex';
@@ -1444,6 +1449,22 @@
       renderNoticesGrid();
       alert('Digital Notice Broadcasted to all students! 📢');
     }
+
+    // AUTO RESTORE LOGGED-IN SESSION ON REFRESH
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedSession = localStorage.getItem('sunohostel_session');
+      if (savedSession) {
+        try {
+          const parsed = JSON.parse(savedSession);
+          if (parsed && parsed.role) {
+            currentUser = parsed;
+            showAuthenticatedPortal();
+          }
+        } catch (e) {
+          localStorage.removeItem('sunohostel_session');
+        }
+      }
+    });
   </script>
 </body>
 </html>
