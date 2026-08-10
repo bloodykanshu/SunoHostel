@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SunoHostel — Hostel Complaint & Management System</title>
   <meta name="description" content="Production Hostel Complaint & Management Web System for Students & Wardens.">
+  <link rel="icon" type="image/png" href="logo.png">
 
   <!-- Google Fonts & Lucide Icons -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,6 +63,27 @@
       gap: 12px;
       text-decoration: none;
       color: #FFF;
+    }
+
+    .brand-logo-img {
+      width: 44px;
+      height: 44px;
+      object-fit: contain;
+      background: #FFFFFF;
+      border-radius: 50%;
+      padding: 3px;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+    }
+
+    .login-logo-img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      background: #FFFFFF;
+      border-radius: 50%;
+      padding: 4px;
+      margin-bottom: 12px;
+      box-shadow: 0 8px 22px rgba(99, 102, 241, 0.4);
     }
 
     .brand-icon {
@@ -523,10 +545,10 @@
   <!-- Navigation Bar -->
   <nav class="navbar">
     <a href="#" class="brand">
-      <div class="brand-icon">🏰</div>
+      <img src="logo.png" alt="IIIT Vadodara Logo" class="brand-logo-img">
       <div>
         <span class="brand-title">SunoHostel</span>
-        <div style="font-size: 11px; color: var(--text-muted);">Hostel Complaint System</div>
+        <div style="font-size: 11px; color: var(--text-muted);">IIIT Vadodara Hostel System</div>
       </div>
     </a>
 
@@ -552,9 +574,9 @@
     <div class="login-card">
       
       <div class="login-header">
-        <div class="login-logo">🏰</div>
+        <img src="logo.png" alt="IIIT Vadodara Logo" class="login-logo-img">
         <h2 class="login-title">SunoHostel Portal Login</h2>
-        <p class="login-subtitle">Choose your role to access your portal</p>
+        <p class="login-subtitle">IIIT Vadodara Hostel Complaint & Management Portal</p>
       </div>
 
       <!-- Role Selection Tabs for Login -->
