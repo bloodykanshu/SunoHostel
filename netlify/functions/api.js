@@ -23,13 +23,40 @@ exports.handler = async (event, context) => {
     await client.connect();
     const body = event.body ? JSON.parse(event.body) : {};
 
+    // 1. EXISTING STUDENT LOGIN & DATABASE MATCH VERIFICATION
+    if (event.path.includes('login')) {
+      const email = body.email ? body.email.trim() : '';
+      const password = body.password ? body.password.trim() : '';
+
+      const res = await client.query(`
+        SELECT * FROM users WHERE LOWER(email) = LOWER($1);
+      `, [email]);
+
+      await client.end();
+
+      if (res.rows.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ success: false, error: "Account not found in CockroachDB. Please register as New Student." })
+        };
+      }
+
+      const user = res.rows[0];
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, user })
+      };
+    }
+
+    // 2. NEW STUDENT REGISTER & SAVE TO COCKROACHDB
     if (event.path.includes('register-sync') || event.path.includes('api')) {
       const name = body.name || 'Student User';
       const roomNumber = body.roomNumber || '304';
       const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
       const role = body.role || 'STUDENT';
 
-      // Use user provided email or fallback to @iiitvadodara.ac.in
       const email = body.email ? body.email.trim() : (name.toLowerCase().replace(/[^a-z0-9]/g, '') + Math.floor(100 + Math.random() * 900) + '@iiitvadodara.ac.in');
       const phone = body.phone ? body.phone.trim() : ('+91 ' + Math.floor(1000000000 + Math.random() * 9000000000));
       const rollNumber = '2026' + Math.floor(1000 + Math.random() * 9000);

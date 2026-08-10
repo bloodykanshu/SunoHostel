@@ -195,6 +195,36 @@
       box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
     }
 
+    /* Sub-tabs for New User vs Existing User */
+    .sub-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 3px;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+
+    .sub-tab-btn {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .sub-tab-btn.active {
+      background: rgba(99, 102, 241, 0.2);
+      color: #818CF8;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
     .form-group {
       margin-bottom: 18px;
     }
@@ -427,55 +457,84 @@
       <!-- Role Selection Tabs for Login -->
       <div class="login-tabs">
         <button class="login-tab-btn active" id="lTabStudent" onclick="switchLoginRole('STUDENT')">
-          <i data-lucide="user"></i> Student Login
+          <i data-lucide="user"></i> Student Portal
         </button>
         <button class="login-tab-btn" id="lTabAdmin" onclick="switchLoginRole('ADMIN')">
-          <i data-lucide="shield"></i> Admin / Warden Login
+          <i data-lucide="shield"></i> Admin / Warden
         </button>
       </div>
 
-      <!-- STUDENT LOGIN FORM WITH VALIDATIONS -->
-      <form id="formStudentLogin" onsubmit="handleStudentLogin(event)">
-        <div class="form-group">
-          <label class="form-label">Student Name *</label>
-          <input type="text" id="sName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+      <!-- STUDENT PORTAL: NEW USER vs EXISTING USER SUB-TABS -->
+      <div id="studentFormWrapper">
+        <div class="sub-tabs">
+          <button class="sub-tab-btn active" id="subTabNew" onclick="switchStudentAuthMode('NEW')">
+            ✨ New Student (Register)
+          </button>
+          <button class="sub-tab-btn" id="subTabExisting" onclick="switchStudentAuthMode('EXISTING')">
+            🔑 Existing Student (Sign In)
+          </button>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">College Email ID *</label>
-          <input type="email" id="sEmail" class="form-input" placeholder="Enter college email ID" required>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">10-Digit Mobile Number *</label>
-          <input type="tel" id="sPhone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" required>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group" style="flex: 1;">
-            <label class="form-label">Room Number *</label>
-            <input type="text" id="sRoom" class="form-input" placeholder="e.g. 304" required>
+        <!-- 1. NEW STUDENT REGISTRATION FORM -->
+        <form id="formStudentRegister" onsubmit="handleStudentRegister(event)">
+          <div class="form-group">
+            <label class="form-label">Student Name *</label>
+            <input type="text" id="sName" class="form-input" placeholder="e.g. Rahul Sharma" required>
           </div>
-          <div class="form-group" style="flex: 1;">
-            <label class="form-label">Select Hostel *</label>
-            <select id="sBlock" class="form-select">
-              <option value="Girls Hostel">👩 Girls Hostel</option>
-              <option value="Boys Diu Hostel">👨 Boys Diu Hostel</option>
-              <option value="Boys Una Hostel 1">👨 Boys Una Hostel 1</option>
-              <option value="Boys Una Hostel 2">👨 Boys Una Hostel 2</option>
-            </select>
+
+          <div class="form-group">
+            <label class="form-label">College Email ID *</label>
+            <input type="email" id="sEmail" class="form-input" placeholder="Enter college email ID" required>
           </div>
-        </div>
 
-        <div class="form-group">
-          <label class="form-label">Password *</label>
-          <input type="password" id="sPassword" class="form-input" placeholder="Enter password" required>
-        </div>
+          <div class="form-group">
+            <label class="form-label">10-Digit Mobile Number *</label>
+            <input type="tel" id="sPhone" class="form-input" placeholder="e.g. 9876543210" maxlength="10" pattern="[0-9]{10}" required>
+          </div>
 
-        <button type="submit" class="btn-login">
-          <i data-lucide="log-in"></i> Login To Student Portal
-        </button>
-      </form>
+          <div class="form-row">
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Room Number *</label>
+              <input type="text" id="sRoom" class="form-input" placeholder="e.g. 304" required>
+            </div>
+            <div class="form-group" style="flex: 1;">
+              <label class="form-label">Select Hostel *</label>
+              <select id="sBlock" class="form-select">
+                <option value="Girls Hostel">👩 Girls Hostel</option>
+                <option value="Boys Diu Hostel">👨 Boys Diu Hostel</option>
+                <option value="Boys Una Hostel 1">👨 Boys Una Hostel 1</option>
+                <option value="Boys Una Hostel 2">👨 Boys Una Hostel 2</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input type="password" id="sPassword" class="form-input" placeholder="Enter password" required>
+          </div>
+
+          <button type="submit" class="btn-login">
+            <i data-lucide="user-plus"></i> Register & Create Account
+          </button>
+        </form>
+
+        <!-- 2. EXISTING STUDENT LOGIN FORM (WITH COCKROACHDB VERIFICATION) -->
+        <form id="formStudentSignIn" onsubmit="handleStudentSignIn(event)" style="display: none;">
+          <div class="form-group">
+            <label class="form-label">Registered College Email ID *</label>
+            <input type="email" id="sExistEmail" class="form-input" placeholder="Enter your registered college email" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Account Password *</label>
+            <input type="password" id="sExistPassword" class="form-input" placeholder="Enter account password" required>
+          </div>
+
+          <button type="submit" class="btn-login" id="btnStudentSignIn">
+            <i data-lucide="log-in"></i> Verify Database & Login
+          </button>
+        </form>
+      </div>
 
       <!-- ADMIN / WARDEN LOGIN FORM WITH STRICT CREDENTIAL VALIDATION -->
       <form id="formAdminLogin" onsubmit="handleAdminLogin(event)" style="display: none;">
@@ -857,6 +916,7 @@
     ];
 
     let activeLoginTab = 'STUDENT';
+    let activeStudentMode = 'NEW';
     let currentUser = null;
     let currentUrgency = 'NORMAL';
     let selectedTicketId = null;
@@ -868,11 +928,21 @@
       document.getElementById('lTabStudent').classList.toggle('active', role === 'STUDENT');
       document.getElementById('lTabAdmin').classList.toggle('active', role === 'ADMIN');
 
-      document.getElementById('formStudentLogin').style.display = role === 'STUDENT' ? 'block' : 'none';
+      document.getElementById('studentFormWrapper').style.display = role === 'STUDENT' ? 'block' : 'none';
       document.getElementById('formAdminLogin').style.display = role === 'ADMIN' ? 'block' : 'none';
     }
 
-    async function handleStudentLogin(e) {
+    function switchStudentAuthMode(mode) {
+      activeStudentMode = mode;
+      document.getElementById('subTabNew').classList.toggle('active', mode === 'NEW');
+      document.getElementById('subTabExisting').classList.toggle('active', mode === 'EXISTING');
+
+      document.getElementById('formStudentRegister').style.display = mode === 'NEW' ? 'block' : 'none';
+      document.getElementById('formStudentSignIn').style.display = mode === 'EXISTING' ? 'block' : 'none';
+    }
+
+    // 1. NEW STUDENT REGISTRATION
+    async function handleStudentRegister(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('sName').value.trim();
       const email = document.getElementById('sEmail').value.trim();
@@ -880,12 +950,10 @@
       const room = document.getElementById('sRoom').value.trim();
       const block = document.getElementById('sBlock').value;
 
-      // 1. Email Domain Validation: Must end with @iiitvadodara.ac.in
       if (!email.toLowerCase().endsWith('@iiitvadodara.ac.in')) {
         return alert('enter your college id only');
       }
 
-      // 2. Phone Number Validation: Must be exactly 10 digits
       const phoneRegex = /^[0-9]{10}$/;
       if (!phoneRegex.test(phone)) {
         return alert('❌ Invalid Mobile Number! Please enter a valid 10-digit mobile number.');
@@ -893,7 +961,7 @@
 
       currentUser = { role: 'STUDENT', name, email, phone, room, block };
       
-      // Async Save to CockroachDB via Netlify Serverless Function
+      // Async Save to CockroachDB
       try {
         fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
@@ -905,20 +973,65 @@
       showAuthenticatedPortal();
     }
 
+    // 2. EXISTING STUDENT SIGN IN (WITH DATABASE LOOKUP)
+    async function handleStudentSignIn(e) {
+      if (e) e.preventDefault();
+      const email = document.getElementById('sExistEmail').value.trim();
+      const password = document.getElementById('sExistPassword').value.trim();
+
+      if (!email.toLowerCase().endsWith('@iiitvadodara.ac.in')) {
+        return alert('enter your college id only');
+      }
+
+      const btn = document.getElementById('btnStudentSignIn');
+      btn.disabled = true;
+      btn.innerText = '🔍 Checking Database...';
+
+      try {
+        const response = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await response.json();
+
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="log-in"></i> Verify Database & Login';
+        lucide.createIcons();
+
+        if (data.success && data.user) {
+          const dbUser = data.user;
+          currentUser = {
+            role: dbUser.role || 'STUDENT',
+            name: dbUser.name || 'Student',
+            email: dbUser.email || email,
+            phone: dbUser.phone || 'N/A',
+            room: dbUser.roomnumber || dbUser.roomNumber || '304',
+            block: dbUser.hostelblock || dbUser.hostelBlock || 'Boys Una Hostel 1'
+          };
+          showAuthenticatedPortal();
+        } else {
+          alert('❌ Account not found in CockroachDB database!\n\nPlease click "New Student (Register)" to create your account first.');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="log-in"></i> Verify Database & Login';
+        alert('❌ Database Connection Error! Please try again.');
+      }
+    }
+
     async function handleAdminLogin(e) {
       if (e) e.preventDefault();
       const nameInput = document.getElementById('aEmail').value.trim();
       const passcode = document.getElementById('aPasscode').value.trim();
       const region = document.getElementById('aRegion').value || 'All Hostels';
 
-      // Strict Admin Credential Validation: Name = Vikas, Password = Diu@kevdi@vikas
       if (nameInput.toLowerCase() !== 'vikas' || passcode !== 'Diu@kevdi@vikas') {
         return alert('only authorized user can log in');
       }
 
       currentUser = { role: 'ADMIN', name: 'Vikas', email: 'vikas.warden@sunohostel.edu', phone: '+91 99000 11223', title: region };
 
-      // Async Save to CockroachDB via Netlify Serverless Function
       try {
         fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
@@ -990,7 +1103,6 @@
 
     function updateProfileData() {
       if (!currentUser) return;
-      // Tab 5 Profile
       document.getElementById('profFullname').innerText = currentUser.name || 'Student';
       document.getElementById('profSubhead').innerText = currentUser.role === 'STUDENT' ? `Room ${currentUser.room} • ${currentUser.block}` : currentUser.title;
       document.getElementById('pValName').innerText = currentUser.name || 'N/A';
@@ -999,7 +1111,6 @@
       document.getElementById('pValBlock').innerText = currentUser.block || currentUser.title || 'N/A';
       document.getElementById('pValRoom').innerText = currentUser.room ? `Room ${currentUser.room}` : 'Warden Admin Office';
 
-      // Modal Profile
       document.getElementById('mProfIcon').innerText = currentUser.role === 'STUDENT' ? '🎓' : '🛡️';
       document.getElementById('mProfName').innerText = currentUser.name || 'User';
       document.getElementById('mProfRole').innerText = currentUser.role === 'STUDENT' ? 'Verified Student' : 'Chief Hostel Warden';
@@ -1047,7 +1158,6 @@
 
       tickets.unshift(ticketObj);
 
-      // Async DB Push to Netlify Function
       try {
         fetch(`${API_BASE}/complaints`, {
           method: 'POST',
