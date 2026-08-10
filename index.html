@@ -941,7 +941,7 @@
       document.getElementById('formStudentSignIn').style.display = mode === 'EXISTING' ? 'block' : 'none';
     }
 
-    // 1. NEW STUDENT REGISTRATION WITH DUPLICATE CHECK
+    // 1. NEW STUDENT REGISTRATION WITH DUPLICATE CHECK & REAL PASSWORD
     async function handleStudentRegister(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('sName').value.trim();
@@ -949,6 +949,7 @@
       const phone = document.getElementById('sPhone').value.trim();
       const room = document.getElementById('sRoom').value.trim();
       const block = document.getElementById('sBlock').value;
+      const password = document.getElementById('sPassword').value.trim();
 
       if (!email.toLowerCase().endsWith('@iiitvadodara.ac.in')) {
         return alert('enter your college id only');
@@ -967,7 +968,7 @@
         const response = await fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, phone, roomNumber: room, hostelBlock: block, role: 'STUDENT' })
+          body: JSON.stringify({ name, email, phone, roomNumber: room, hostelBlock: block, password, role: 'STUDENT' })
         });
         const data = await response.json();
 
@@ -988,7 +989,7 @@
       }
     }
 
-    // 2. EXISTING STUDENT SIGN IN
+    // 2. EXISTING STUDENT SIGN IN (WITH STRICT PASSWORD MATCHING)
     async function handleStudentSignIn(e) {
       if (e) e.preventDefault();
       const email = document.getElementById('sExistEmail').value.trim();
@@ -1026,7 +1027,7 @@
           };
           showAuthenticatedPortal();
         } else {
-          alert('account not found in database');
+          alert(data.error || 'account not found in database');
         }
       } catch (err) {
         btn.disabled = false;

@@ -23,7 +23,7 @@ exports.handler = async (event, context) => {
     await client.connect();
     const body = event.body ? JSON.parse(event.body) : {};
 
-    // 1. EXISTING STUDENT LOGIN & DATABASE MATCH VERIFICATION
+    // 1. EXISTING STUDENT LOGIN & EXACT PASSWORD VERIFICATION
     if (event.path.includes('login')) {
       const email = body.email ? body.email.trim() : '';
       const password = body.password ? body.password.trim() : '';
@@ -43,6 +43,16 @@ exports.handler = async (event, context) => {
       }
 
       const user = res.rows[0];
+      const storedPassword = user.passwordhash || user.password;
+
+      if (storedPassword && storedPassword !== password) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ success: false, error: "invalid password" })
+        };
+      }
+
       return {
         statusCode: 200,
         headers,
@@ -50,7 +60,7 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 2. NEW STUDENT REGISTER WITH DUPLICATE EMAIL & PHONE CHECK
+    // 2. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
     if (event.path.includes('register-sync') || event.path.includes('api')) {
       const name = body.name || 'Student User';
       const roomNumber = body.roomNumber || '304';
@@ -58,8 +68,9 @@ exports.handler = async (event, context) => {
       const role = body.role || 'STUDENT';
       const email = body.email ? body.email.trim() : '';
       const phone = body.phone ? body.phone.trim() : '';
+      const password = body.password ? body.password.trim() : 'pass_123';
 
-      // Check duplicate Email or Phone Number in CockroachDB
+      // Check duplicate Email or Phone Number
       if (email || phone) {
         const checkRes = await client.query(`
           SELECT email, phone FROM users WHERE LOWER(email) = LOWER($1) OR phone = $2;
@@ -91,7 +102,7 @@ exports.handler = async (event, context) => {
         INSERT INTO users (name, email, phone, passwordHash, role, hostelBlock, roomNumber, rollNumber)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING *;
-      `, [name, email, phone, 'pass_123', role, hostelBlock, roomNumber, rollNumber]);
+      `, [name, email, phone, password, role, hostelBlock, roomNumber, rollNumber]);
 
       await client.end();
       return {
