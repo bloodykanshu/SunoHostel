@@ -4,19 +4,19 @@ const connectionString = "postgresql://akansh:ex19f2XS4KkMOyi8SUQNdQ@low-mole-19
 
 const client = new Client({ connectionString });
 
-async function insertTestUser() {
+async function insertUser() {
   try {
     await client.connect();
-    console.log("Connecting to CockroachDB...");
+    console.log("Inserting Akansh Yadavv into CockroachDB...");
 
     const res = await client.query(`
       INSERT INTO users (name, email, phone, passwordHash, role, hostelBlock, roomNumber, rollNumber)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       ON CONFLICT (email) DO NOTHING
       RETURNING *;
-    `, ['Rahul Sharma', 'rahul.sharma@sunohostel.edu', '+91 9876543210', 'hashed_pass_123', 'STUDENT', 'Boys Diu Hostel', '304', '2026CS104']);
+    `, ['Akansh Yadavv', 'akansh.yadavv@sunohostel.edu', '+91 9999888877', 'hashed_pass_akansh', 'STUDENT', 'Boys Una Hostel 1', '102', '2026CS102']);
 
-    console.log("Inserted User Row in CockroachDB:", res.rows);
+    console.log("Successfully Inserted Akansh Yadavv in CockroachDB:", res.rows);
   } catch (err) {
     console.error("Insert Error:", err);
   } finally {
@@ -24,4 +24,4 @@ async function insertTestUser() {
   }
 }
 
-insertTestUser();
+insertUser();

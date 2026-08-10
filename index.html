@@ -722,7 +722,7 @@
 
   <!-- LOGIC SCRIPT -->
   <script>
-    const API_BASE = window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api';
+    const API_BASE = '/.netlify/functions/api';
     
     let tickets = [];
     let notices = [];
@@ -757,13 +757,13 @@
 
       currentUser = { role: 'STUDENT', name, room, block };
       
-      // Async Save to CockroachDB
+      // Async Save to CockroachDB via Netlify Serverless Function
       try {
-        fetch(`${API_BASE}/auth/register-sync`, {
+        fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, roomNumber: room, hostelBlock: block, role: 'STUDENT' })
-        }).catch(err => console.log('DB sync:', err));
+        }).then(r => r.json()).then(data => console.log('Netlify DB Sync Success:', data)).catch(err => console.log('DB sync:', err));
       } catch (err) {}
 
       showAuthenticatedPortal();
@@ -777,13 +777,13 @@
 
       currentUser = { role: 'ADMIN', name: adminName, title: region };
 
-      // Async Save to CockroachDB
+      // Async Save to CockroachDB via Netlify Serverless Function
       try {
-        fetch(`${API_BASE}/auth/register-sync`, {
+        fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: adminName, role: 'WARDEN', hostelBlock: region })
-        }).catch(err => console.log('DB sync:', err));
+        }).then(r => r.json()).then(data => console.log('Netlify DB Sync Success:', data)).catch(err => console.log('DB sync:', err));
       } catch (err) {}
 
       showAuthenticatedPortal();
@@ -876,7 +876,7 @@
 
       tickets.unshift(ticketObj);
 
-      // Async DB Push
+      // Async DB Push to Netlify Function
       try {
         fetch(`${API_BASE}/complaints`, {
           method: 'POST',
@@ -891,7 +891,7 @@
             hostelBlock: block,
             isAnonymous: isAnon
           })
-        }).catch(err => console.log('DB sync error:', err));
+        }).then(r => r.json()).then(data => console.log('Complaint Sync Success:', data)).catch(err => console.log('DB sync error:', err));
       } catch (err) {}
 
       alert('Complaint Ticket ' + newId + ' Logged Successfully! 🎉');
