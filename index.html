@@ -416,6 +416,106 @@
       padding: 40px 20px;
       color: var(--text-muted);
     }
+
+    /* RESPONSIVE MEDIA QUERIES FOR ALL DEVICES */
+    @media (max-width: 992px) {
+      .grid-2col {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .navbar {
+        padding: 12px 16px;
+      }
+      .brand-title {
+        font-size: 17px;
+      }
+      .brand-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 16px;
+      }
+      .login-card {
+        padding: 24px 18px;
+        border-radius: 18px;
+      }
+      .login-title {
+        font-size: 20px;
+      }
+      .portal-banner {
+        padding: 16px 16px 8px 16px;
+      }
+      .main-content {
+        padding: 0 16px 32px 16px;
+      }
+      .student-tabs {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 8px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+      }
+      .student-tabs::-webkit-scrollbar {
+        display: none;
+      }
+      .tab-btn {
+        flex-shrink: 0;
+        padding: 8px 14px;
+        font-size: 12px;
+      }
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat-card {
+        padding: 14px;
+      }
+      .stat-val {
+        font-size: 24px;
+      }
+      .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      table {
+        min-width: 640px;
+      }
+    }
+
+    @media (max-width: 576px) {
+      .form-row {
+        flex-direction: column;
+        gap: 0;
+      }
+      .login-tabs {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .sub-tabs {
+        flex-direction: column;
+        gap: 4px;
+      }
+      .urgency-group {
+        flex-direction: column;
+        gap: 8px;
+      }
+      .profile-field-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+      }
+      .modal-card {
+        width: 95%;
+        padding: 18px;
+        max-height: 90vh;
+        overflow-y: auto;
+      }
+    }
   </style>
 </head>
 <body>
