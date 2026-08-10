@@ -513,7 +513,7 @@
             <input type="password" id="sPassword" class="form-input" placeholder="Enter password" required>
           </div>
 
-          <button type="submit" class="btn-login">
+          <button type="submit" class="btn-login" id="btnStudentRegister">
             <i data-lucide="user-plus"></i> Register & Create Account
           </button>
         </form>
@@ -941,7 +941,7 @@
       document.getElementById('formStudentSignIn').style.display = mode === 'EXISTING' ? 'block' : 'none';
     }
 
-    // 1. NEW STUDENT REGISTRATION
+    // 1. NEW STUDENT REGISTRATION WITH DUPLICATE CHECK
     async function handleStudentRegister(e) {
       if (e) e.preventDefault();
       const name = document.getElementById('sName').value.trim();
@@ -959,18 +959,33 @@
         return alert('❌ Invalid Mobile Number! Please enter a valid 10-digit mobile number.');
       }
 
-      currentUser = { role: 'STUDENT', name, email, phone, room, block };
-      
-      // Async Save to CockroachDB
+      const btn = document.getElementById('btnStudentRegister');
+      btn.disabled = true;
+      btn.innerText = '⏳ Creating Account...';
+
       try {
-        fetch(`${API_BASE}/register-sync`, {
+        const response = await fetch(`${API_BASE}/register-sync`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, email, phone, roomNumber: room, hostelBlock: block, role: 'STUDENT' })
-        }).then(r => r.json()).then(data => console.log('Netlify DB Sync Success:', data)).catch(err => console.log('DB sync:', err));
-      } catch (err) {}
+        });
+        const data = await response.json();
 
-      showAuthenticatedPortal();
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="user-plus"></i> Register & Create Account';
+        lucide.createIcons();
+
+        if (data.success && data.user) {
+          currentUser = { role: 'STUDENT', name, email, phone, room, block };
+          showAuthenticatedPortal();
+        } else {
+          alert(data.error || 'Registration failed');
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="user-plus"></i> Register & Create Account';
+        alert('Registration error. Please try again.');
+      }
     }
 
     // 2. EXISTING STUDENT SIGN IN (WITH DATABASE LOOKUP)

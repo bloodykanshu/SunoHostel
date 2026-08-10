@@ -38,7 +38,7 @@ exports.handler = async (event, context) => {
         return {
           statusCode: 404,
           headers,
-          body: JSON.stringify({ success: false, error: "Account not found in CockroachDB. Please register as New Student." })
+          body: JSON.stringify({ success: false, error: "account not found in database" })
         };
       }
 
@@ -50,21 +50,46 @@ exports.handler = async (event, context) => {
       };
     }
 
-    // 2. NEW STUDENT REGISTER & SAVE TO COCKROACHDB
+    // 2. NEW STUDENT REGISTER WITH DUPLICATE EMAIL & PHONE CHECK
     if (event.path.includes('register-sync') || event.path.includes('api')) {
       const name = body.name || 'Student User';
       const roomNumber = body.roomNumber || '304';
       const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
       const role = body.role || 'STUDENT';
+      const email = body.email ? body.email.trim() : '';
+      const phone = body.phone ? body.phone.trim() : '';
 
-      const email = body.email ? body.email.trim() : (name.toLowerCase().replace(/[^a-z0-9]/g, '') + Math.floor(100 + Math.random() * 900) + '@iiitvadodara.ac.in');
-      const phone = body.phone ? body.phone.trim() : ('+91 ' + Math.floor(1000000000 + Math.random() * 9000000000));
+      // Check duplicate Email or Phone Number in CockroachDB
+      if (email || phone) {
+        const checkRes = await client.query(`
+          SELECT email, phone FROM users WHERE LOWER(email) = LOWER($1) OR phone = $2;
+        `, [email, phone]);
+
+        if (checkRes.rows.length > 0) {
+          const matched = checkRes.rows[0];
+          await client.end();
+          if (matched.email && matched.email.toLowerCase() === email.toLowerCase()) {
+            return {
+              statusCode: 400,
+              headers,
+              body: JSON.stringify({ success: false, error: "this email is already registered" })
+            };
+          }
+          if (matched.phone && matched.phone === phone) {
+            return {
+              statusCode: 400,
+              headers,
+              body: JSON.stringify({ success: false, error: "this phone number is already registered" })
+            };
+          }
+        }
+      }
+
       const rollNumber = '2026' + Math.floor(1000 + Math.random() * 9000);
 
       const res = await client.query(`
         INSERT INTO users (name, email, phone, passwordHash, role, hostelBlock, roomNumber, rollNumber)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (email) DO UPDATE SET name = EXCLUDED.name, roomNumber = EXCLUDED.roomNumber, phone = EXCLUDED.phone
         RETURNING *;
       `, [name, email, phone, 'pass_123', role, hostelBlock, roomNumber, rollNumber]);
 
