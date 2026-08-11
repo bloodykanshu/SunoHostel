@@ -9,23 +9,29 @@ async function seedAdmin() {
     const db = client.db('sunohostel');
     const usersCol = db.collection('users');
 
+    const adminData = {
+      name: "Vikas",
+      email: "vikas.kumar@iiitvadodara.ac.in",
+      phone: "+91 99000 11223",
+      passwordHash: "Diu@kevdi@vikas",
+      role: "ADMIN",
+      hostelBlock: "All Hostels (Chief Warden)",
+      createdAt: new Date()
+    };
+
     await usersCol.updateOne(
-      { email: "vikas" },
-      {
-        $set: {
-          name: "Vikas",
-          email: "vikas",
-          phone: "+91 99000 11223",
-          passwordHash: "Diu@kevdi@vikas",
-          role: "ADMIN",
-          hostelBlock: "All Hostels (Chief Warden)",
-          createdAt: new Date()
-        }
-      },
+      { email: "vikas.kumar@iiitvadodara.ac.in" },
+      { $set: adminData },
       { upsert: true }
     );
 
-    console.log("✅ SUCCESS: Admin user Vikas (Diu@kevdi@vikas) saved in MongoDB Atlas users collection!");
+    await usersCol.updateOne(
+      { email: "vikas" },
+      { $set: { ...adminData, email: "vikas" } },
+      { upsert: true }
+    );
+
+    console.log("✅ SUCCESS: Admin user Vikas (vikas.kumar@iiitvadodara.ac.in) updated in MongoDB Atlas!");
   } catch (err) {
     console.error("Seed error:", err);
   } finally {
