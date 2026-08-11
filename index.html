@@ -805,6 +805,18 @@
           </div>
 
           <div>
+            <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(59, 130, 246, 0.1)); border-color: rgba(16, 185, 129, 0.3);">
+              <div class="card-title" style="color: #6EE7B7;">
+                <i data-lucide="mail"></i> Direct Warden Email
+              </div>
+              <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6; margin-bottom: 14px;">
+                Need urgent escalation? Send a direct email to Hostel Warden (<strong>akanshyadav91@gmail.com</strong>).
+              </p>
+              <button class="btn-login" style="background: linear-gradient(135deg, #10B981, #059669); margin-top: 0; padding: 10px; font-size: 13px;" onclick="emailWardenDirectly(null)">
+                <i data-lucide="send"></i> Email Warden (akanshyadav91@gmail.com)
+              </button>
+            </div>
+
             <div class="card" style="margin-bottom: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1)); border-color: rgba(99, 102, 241, 0.3);">
               <div class="card-title" style="color: #A78BFA;">
                 <i data-lucide="zap"></i> Quick Resolution Guarantee
@@ -1434,13 +1446,16 @@
           ${t.description ? `<p style="font-size: 14px; color: #CBD5E1; line-height: 1.5; margin-bottom: 12px;">${t.description}</p>` : ''}
 
           <!-- Support / Oppose Community Reaction Bar -->
-          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.7); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 12px;">
-            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Student Community Votes:</span>
-            <div style="display: flex; gap: 10px;">
-              <button onclick="voteComplaint('${t.id}', 'SUPPORT')" style="background: ${hasUpvoted ? '#10B981' : 'rgba(16, 185, 129, 0.12)'}; color: ${hasUpvoted ? '#FFF' : '#10B981'}; border: 1px solid #10B981; padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+          <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(15, 23, 42, 0.7); padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Student Actions:</span>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button onclick="emailWardenDirectly('${t.id}')" style="background: rgba(99, 102, 241, 0.15); color: #818CF8; border: 1px solid rgba(99, 102, 241, 0.4); padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                📧 Email Warden
+              </button>
+              <button onclick="voteComplaint('${t.id}', 'SUPPORT')" style="background: ${hasUpvoted ? '#10B981' : 'rgba(16, 185, 129, 0.12)'}; color: ${hasUpvoted ? '#FFF' : '#10B981'}; border: 1px solid #10B981; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
                 👍 Support (${t.supports || 0})
               </button>
-              <button onclick="voteComplaint('${t.id}', 'OPPOSE')" style="background: ${hasDownvoted ? '#EF4444' : 'rgba(239, 68, 68, 0.12)'}; color: ${hasDownvoted ? '#FFF' : '#FCA5A5'}; border: 1px solid #EF4444; padding: 5px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+              <button onclick="voteComplaint('${t.id}', 'OPPOSE')" style="background: ${hasDownvoted ? '#EF4444' : 'rgba(239, 68, 68, 0.12)'}; color: ${hasDownvoted ? '#FFF' : '#FCA5A5'}; border: 1px solid #EF4444; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
                 👎 Oppose (${t.opposes || 0})
               </button>
             </div>
@@ -1455,6 +1470,39 @@
         `;
         container.appendChild(card);
       });
+    }
+
+    function emailWardenDirectly(ticketId) {
+      const wardenEmail = 'akanshyadav91@gmail.com';
+      let subject = 'Direct Hostel Complaint / Inquiry to Warden';
+      let body = `Respected Warden,\n\nI am writing to bring a hostel issue to your direct attention.\n\n`;
+
+      if (ticketId && typeof tickets !== 'undefined' && tickets.length > 0) {
+        const ticket = tickets.find(t => t.id === ticketId);
+        if (ticket) {
+          subject = `[SunoHostel Ticket ${ticket.id}] ${ticket.title}`;
+          body = `Respected Warden,\n\nI am writing regarding Hostel Complaint Ticket ${ticket.id}:\n\n` +
+                 `• Ticket ID: ${ticket.id}\n` +
+                 `• Issue Title: ${ticket.title}\n` +
+                 `• Category: ${ticket.category}\n` +
+                 `• Room/Hostel: Room ${ticket.room} (${ticket.block})\n` +
+                 `• Urgency: ${ticket.urgency}\n` +
+                 `• Community Support: ${ticket.supports || 0} Votes\n\n` +
+                 `Issue Description:\n${ticket.description || 'N/A'}\n\n` +
+                 `Submitted By: ${ticket.studentName}\n` +
+                 `User Email: ${currentUser?.email || 'Student'}\n\n` +
+                 `Please look into this issue at the earliest.\n\nThank you.`;
+        }
+      } else if (currentUser) {
+        body += `Student Name: ${currentUser.name || 'Student'}\n` +
+                `Hostel Block: ${currentUser.block || 'Hostel'}\n` +
+                `Room Number: ${currentUser.room || 'N/A'}\n` +
+                `Email: ${currentUser.email || ''}\n\n` +
+                `Issue Details:\n[Please write your complaint details here]\n\nThank you.`;
+      }
+
+      const mailtoUrl = `mailto:${wardenEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailtoUrl;
     }
 
     async function voteComplaint(ticketId, voteType) {
