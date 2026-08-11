@@ -1402,14 +1402,23 @@
           if (t.status === 'RESOLVED') resolved++;
 
           const tr = document.createElement('tr');
-          const filedByText = t.studentName && t.studentEmail ? `${t.studentName} (${t.studentEmail})` : (t.studentName || 'Student');
 
           tr.innerHTML = `
-            <td>
-              <div style="font-weight: 700;">${t.id}</div>
-              <div style="color: var(--text-muted); font-size: 13px;">${t.title}</div>
-              <div style="font-size: 11px; color: #818CF8; margin-top: 2px; font-weight: 600;">Filed by: ${filedByText}</div>
-              <div style="margin-top: 6px; display: flex; gap: 6px; align-items: center;">
+            <td style="max-width: 320px; padding: 14px 12px;">
+              <div style="font-weight: 800; color: var(--primary); font-size: 14px;">${t.id}</div>
+              <div style="color: #F8FAFC; font-weight: 700; font-size: 14px; margin-top: 2px;">${t.title}</div>
+              
+              <!-- FULL DETAILED PROBLEM DESCRIPTION -->
+              ${t.description ? `<div style="color: #CBD5E1; font-size: 13px; margin-top: 6px; background: rgba(15, 23, 42, 0.7); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--border-color); line-height: 1.45; white-space: pre-wrap;">${t.description}</div>` : ''}
+
+              <!-- STUDENT NAME & EMAIL DETAILS -->
+              <div style="font-size: 12px; color: #818CF8; margin-top: 6px; font-weight: 600; background: rgba(99, 102, 241, 0.1); padding: 6px 10px; border-radius: 6px; border: 1px solid rgba(99, 102, 241, 0.2);">
+                🎓 Filed by: <strong style="color: #FFF;">${t.studentName || 'Student'}</strong>
+                ${t.studentEmail ? `<br>✉️ Email: <a href="mailto:${t.studentEmail}" style="color: #38BDF8; font-weight: 700; text-decoration: underline;">${t.studentEmail}</a>` : ''}
+              </div>
+
+              <!-- COMMUNITY VOTES -->
+              <div style="margin-top: 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
                 <span style="background: rgba(16,185,129,0.12); color: #10B981; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.3);">
                   👍 ${t.supports || 0} Support
                 </span>
