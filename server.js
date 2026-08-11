@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const { MongoClient } = require('mongodb');
 
 const app = express();
@@ -19,12 +20,30 @@ async function getDb() {
   return cachedDb;
 }
 
+// 🛡️ SECURITY RATE LIMITERS (Anti Brute-Force & Anti DDoS)
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200, // Limit each IP to 200 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many requests from this IP, please try again later." }
+});
+
+const authLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: 5, // Max 5 login attempts per minute per IP to prevent brute-force attacks
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: "Too many login attempts! Account temporarily locked for 1 minute for security." }
+});
+
 app.use(cors());
 app.use(express.json());
+app.use('/api/', apiLimiter);
 app.use(express.static(path.join(__dirname)));
 
-// 1. EXISTING STUDENT LOGIN & EXACT PASSWORD VERIFICATION
-app.post('/api/login', async (req, res) => {
+// 1. EXISTING STUDENT & WARDEN LOGIN (WITH BRUTE-FORCE RATE LIMITING)
+app.post('/api/login', authLimiter, async (req, res) => {
   try {
     const db = await getDb();
     const email = req.body.email ? req.body.email.trim().toLowerCase() : '';
@@ -205,8 +224,8 @@ app.post('/api/update-ticket', async (req, res) => {
   }
 });
 
-// 6. NEW STUDENT REGISTER WITH ACTUAL PASSWORD & DUPLICATE CHECKS
-app.post('/api/register-sync', async (req, res) => {
+// 6. NEW STUDENT REGISTER (WITH BRUTE-FORCE RATE LIMITING)
+app.post('/api/register-sync', authLimiter, async (req, res) => {
   try {
     const db = await getDb();
     const usersCol = db.collection('users');
