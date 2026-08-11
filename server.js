@@ -64,8 +64,8 @@ app.get('/api/complaints', async (req, res) => {
       urgency: r.urgency,
       status: r.status || 'PENDING',
       staff: r.assignedStaff,
-      isAnon: r.isAnonymous,
-      studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student'),
+      studentName: r.studentName || 'Student',
+      studentEmail: r.studentEmail || '',
       supports: r.supports || (r.upvotedBy ? r.upvotedBy.length : 0),
       opposes: r.opposes || (r.downvotedBy ? r.downvotedBy.length : 0),
       upvotedBy: r.upvotedBy || [],
@@ -89,7 +89,8 @@ app.post('/api/complaints', async (req, res) => {
     const urgency = req.body.urgency || 'NORMAL';
     const roomNumber = req.body.roomNumber || '304';
     const hostelBlock = req.body.hostelBlock || 'Boys Una Hostel 1';
-    const isAnonymous = req.body.isAnonymous || false;
+    const studentName = req.body.studentName || 'Student';
+    const studentEmail = req.body.studentEmail || '';
 
     const newComplaint = {
       ticketId,
@@ -99,7 +100,8 @@ app.post('/api/complaints', async (req, res) => {
       urgency,
       roomNumber,
       hostelBlock,
-      isAnonymous,
+      studentName,
+      studentEmail,
       status: 'PENDING',
       supports: 0,
       opposes: 0,

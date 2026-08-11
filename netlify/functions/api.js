@@ -86,8 +86,8 @@ exports.handler = async (event, context) => {
         urgency: r.urgency,
         status: r.status || 'PENDING',
         staff: r.assignedStaff,
-        isAnon: r.isAnonymous,
-        studentName: r.isAnonymous ? 'Anonymous Student' : (r.studentName || 'Student'),
+        studentName: r.studentName || 'Student',
+        studentEmail: r.studentEmail || '',
         supports: r.supports || (r.upvotedBy ? r.upvotedBy.length : 0),
         opposes: r.opposes || (r.downvotedBy ? r.downvotedBy.length : 0),
         upvotedBy: r.upvotedBy || [],
@@ -110,7 +110,8 @@ exports.handler = async (event, context) => {
       const urgency = body.urgency || 'NORMAL';
       const roomNumber = body.roomNumber || '304';
       const hostelBlock = body.hostelBlock || 'Boys Una Hostel 1';
-      const isAnonymous = body.isAnonymous || false;
+      const studentName = body.studentName || 'Student';
+      const studentEmail = body.studentEmail || '';
 
       const newComplaint = {
         ticketId,
@@ -120,7 +121,8 @@ exports.handler = async (event, context) => {
         urgency,
         roomNumber,
         hostelBlock,
-        isAnonymous,
+        studentName,
+        studentEmail,
         status: 'PENDING',
         supports: 0,
         opposes: 0,

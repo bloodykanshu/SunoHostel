@@ -743,14 +743,6 @@
               <span>Log New Hostel Complaint</span>
             </div>
 
-            <div class="anonymous-box">
-              <div>
-                <div style="font-weight: 700; font-size: 14px; color: #818CF8;">Submit Anonymously 🛡️</div>
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Hide identity for sensitive hygiene or ragging reports</div>
-              </div>
-              <input type="checkbox" id="formAnonymous" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
-            </div>
-
             <div class="form-row">
               <div class="form-group" style="flex: 1;">
                 <label class="form-label">Room Number *</label>
@@ -1322,7 +1314,6 @@
       const room = document.getElementById('formRoom').value.trim() || currentUser?.room || '';
       const block = document.getElementById('formBlock').value.trim() || currentUser?.block || '';
       const category = document.getElementById('formCategory').value;
-      const isAnon = document.getElementById('formAnonymous').checked;
 
       if (!title || !desc) return alert('Please enter issue title and description.');
 
@@ -1344,7 +1335,8 @@
             urgency: currentUrgency,
             roomNumber: room,
             hostelBlock: block,
-            isAnonymous: isAnon
+            studentName: currentUser?.name || 'Student',
+            studentEmail: currentUser?.email || ''
           })
         });
       } catch (err) {}
@@ -1356,7 +1348,6 @@
       alert('Complaint Ticket ' + newId + ' Logged Successfully! 🎉');
       document.getElementById('formTitle').value = '';
       document.getElementById('formDesc').value = '';
-      document.getElementById('formAnonymous').checked = false;
 
       await fetchComplaintsFromDB();
       setStudentTab('TRACKER');
@@ -1384,11 +1375,13 @@
           if (t.status === 'RESOLVED') resolved++;
 
           const tr = document.createElement('tr');
+          const filedByText = t.studentName && t.studentEmail ? `${t.studentName} (${t.studentEmail})` : (t.studentName || 'Student');
+
           tr.innerHTML = `
             <td>
               <div style="font-weight: 700;">${t.id}</div>
               <div style="color: var(--text-muted); font-size: 13px;">${t.title}</div>
-              <div style="font-size: 11px; color: #818CF8; margin-top: 2px;">Filed by: ${t.studentName}</div>
+              <div style="font-size: 11px; color: #818CF8; margin-top: 2px; font-weight: 600;">Filed by: ${filedByText}</div>
               <div style="margin-top: 6px; display: flex; gap: 6px; align-items: center;">
                 <span style="background: rgba(16,185,129,0.12); color: #10B981; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; border: 1px solid rgba(16,185,129,0.3);">
                   👍 ${t.supports || 0} Support
